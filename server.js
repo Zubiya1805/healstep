@@ -1,6 +1,8 @@
+const path   = require('path');
+const bcrypt = require('bcrypt');
+const SALT_ROUNDS = 10;
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const pool = require('./db');
@@ -18,6 +20,7 @@ const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- Multer Config ---
 const storage = multer.diskStorage({
@@ -28,9 +31,6 @@ const upload = multer({ storage });
 
 // --- Gemini Helpers ---
 
-/**
- * Reads a file from disk and converts it to a Gemini-compatible inlinePart.
- */
 function fileToInlinePart(filePath) {
   const mimeMap = {
     '.pdf':  'application/pdf',
@@ -45,10 +45,6 @@ function fileToInlinePart(filePath) {
   return { inlineData: { data, mimeType } };
 }
 
-/**
- * Calls Gemini to extract a medical summary and deficiencies from a report file.
- * Returns { extracted_summary, deficiencies }
- */
 async function analyzeReport(filePath) {
   const filePart = fileToInlinePart(filePath);
   const prompt = `You are a clinical AI assistant. Analyze the attached medical report.
@@ -57,18 +53,12 @@ Return ONLY a raw JSON object (no markdown, no code fences) with exactly these t
   "extracted_summary": "<concise 2-4 sentence summary of the patient's condition and surgery outcome>",
   "deficiencies": "<comma-separated list of identified nutritional or physical deficiencies, or 'none'>"
 }`;
-
   const result = await geminiModel.generateContent([prompt, filePart]);
   const text = result.response.text().trim();
-  // Strip accidental markdown fences if present
   const clean = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
   return JSON.parse(clean);
 }
 
-/**
- * Calls Gemini to generate a daily recovery plan based on user profile + report summary.
- * Returns { meal_plan, exercise_plan }
- */
 async function generateRecoveryPlan(user, report) {
   const prompt = `You are a post-operative recovery specialist AI.
 Patient profile:
@@ -90,20 +80,15 @@ Return ONLY a raw JSON object (no markdown, no code fences) with exactly these t
     "hydration": "<water and fluids target>"
   },
   "exercise_plan": [
-    { "name": "<exercise name>", "duration_minutes": <number>, "intensity": "<low|moderate|high>", "instructions": "<brief instructions>" }
+    { "name": "<exercise name>", "duration_minutes": 0, "intensity": "<low|moderate|high>", "instructions": "<brief instructions>" }
   ]
 }`;
-
   const result = await geminiModel.generateContent(prompt);
   const text = result.response.text().trim();
   const clean = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
   return JSON.parse(clean);
 }
 
-/**
- * Calls Gemini to adapt tomorrow's plan based on today's feedback.
- * Returns { meal_plan, exercise_plan }
- */
 async function adaptPlan(user, currentPlan, feedback) {
   const prompt = `You are a post-operative recovery specialist AI.
 Patient: ${user.name}, Surgery: ${user.surgery_type}
@@ -122,12 +107,57 @@ Return ONLY a raw JSON object (no markdown, no code fences) with exactly these t
   "meal_plan": { "breakfast": "", "mid_morning_snack": "", "lunch": "", "evening_snack": "", "dinner": "", "hydration": "" },
   "exercise_plan": [ { "name": "", "duration_minutes": 0, "intensity": "", "instructions": "" } ]
 }`;
-
   const result = await geminiModel.generateContent(prompt);
   const text = result.response.text().trim();
   const clean = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
   return JSON.parse(clean);
 }
+
+// ==========================================
+//  HOMEPAGE
+// ==========================================
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ==========================================
+//  AUTH
+// ==========================================
+
+// POST /api/register
+app.post('/api/register', async (req, res) => {
+  const { name, age, weight, surgery_type, discharge_date, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'name, email, and password are required.' });
+  try {
+    const hash   = await bcrypt.hash(password, SALT_ROUNDS);
+    const result = await pool.query(
+      `INSERT INTO users (name, age, weight, surgery_type, discharge_date, email, password, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING id, name, email`,
+      [name, age || null, weight || null, surgery_type || null, discharge_date || null, email, hash]
+    );
+    const user = result.rows[0];
+    res.status(201).json({ user_id: user.id, name: user.name, email: user.email });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Email already registered.' });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/login
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'email and password are required.' });
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (!result.rows.length) return res.status(401).json({ error: 'Invalid email or password.' });
+    const user  = result.rows[0];
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ error: 'Invalid email or password.' });
+    res.json({ user_id: user.id, name: user.name, email: user.email });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ==========================================
 //  USERS
@@ -164,38 +194,30 @@ app.get('/api/users/:id', async (req, res) => {
 // ==========================================
 
 // POST /api/reports/upload
-// Uploads the file, immediately calls Gemini to analyze it, stores summary in DB.
 app.post('/api/reports/upload', upload.single('report'), async (req, res) => {
   const { user_id } = req.body;
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const file_path = req.file.path.replace(/\\/g, '/');
-
   try {
-    // 1. Insert report record
     const reportResult = await pool.query(
       `INSERT INTO reports (user_id, file_path, upload_date)
        VALUES ($1, $2, NOW()) RETURNING *`,
       [user_id, file_path]
     );
     const report = reportResult.rows[0];
-
-    // 2. Analyze with Gemini
     const { extracted_summary, deficiencies } = await analyzeReport(file_path);
-
-    // 3. Save summary back to DB
     const updatedReport = await pool.query(
       `UPDATE reports SET extracted_summary = $1, deficiencies = $2
        WHERE id = $3 RETURNING *`,
       [extracted_summary, deficiencies, report.id]
     );
-
     res.status(201).json(updatedReport.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// PATCH /api/reports/:id/summary  — manual override
+// PATCH /api/reports/:id/summary
 app.patch('/api/reports/:id/summary', async (req, res) => {
   const { extracted_summary, deficiencies } = req.body;
   try {
@@ -228,13 +250,11 @@ app.get('/api/reports/user/:user_id', async (req, res) => {
 // ==========================================
 
 // POST /api/plans/generate
-// Calls Gemini to generate a plan from user profile + latest report, saves to DB.
 app.post('/api/plans/generate', async (req, res) => {
   const { user_id, report_id, plan_date } = req.body;
   try {
     const userResult   = await pool.query('SELECT * FROM users   WHERE id = $1', [user_id]);
     const reportResult = await pool.query('SELECT * FROM reports WHERE id = $1', [report_id]);
-
     if (!userResult.rows.length)   return res.status(404).json({ error: 'User not found' });
     if (!reportResult.rows.length) return res.status(404).json({ error: 'Report not found' });
 
@@ -242,21 +262,19 @@ app.post('/api/plans/generate', async (req, res) => {
       userResult.rows[0],
       reportResult.rows[0]
     );
-
     const date = plan_date || new Date().toISOString().split('T')[0];
     const planResult = await pool.query(
       `INSERT INTO recovery_plans (user_id, report_id, plan_date, meal_plan, exercise_plan, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
       [user_id, report_id, date, JSON.stringify(meal_plan), JSON.stringify(exercise_plan)]
     );
-
     res.status(201).json(planResult.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/plans  — manual save (pre-built plan)
+// POST /api/plans  — manual save
 app.post('/api/plans', async (req, res) => {
   const { user_id, report_id, plan_date, meal_plan, exercise_plan } = req.body;
   try {
@@ -305,11 +323,9 @@ app.get('/api/plans/user/:user_id', async (req, res) => {
 // ==========================================
 
 // POST /api/feedback
-// Saves feedback, then calls Gemini to adapt tomorrow's plan automatically.
 app.post('/api/feedback', async (req, res) => {
   const { user_id, feedback_date, compliance_score, feeling_score, notes } = req.body;
   try {
-    // 1. Save feedback
     const fbResult = await pool.query(
       `INSERT INTO feedback (user_id, feedback_date, compliance_score, feeling_score, notes, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
@@ -317,7 +333,6 @@ app.post('/api/feedback', async (req, res) => {
     );
     const feedback = fbResult.rows[0];
 
-    // 2. Fetch user + today's plan
     const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [user_id]);
     const planResult = await pool.query(
       `SELECT * FROM recovery_plans WHERE user_id = $1 AND plan_date = CURRENT_DATE
@@ -332,12 +347,9 @@ app.post('/api/feedback', async (req, res) => {
         planResult.rows[0],
         feedback
       );
-
-      // 3. Save adapted plan for tomorrow
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowDate = tomorrow.toISOString().split('T')[0];
-
       const newPlan = await pool.query(
         `INSERT INTO recovery_plans (user_id, report_id, plan_date, meal_plan, exercise_plan, created_at)
          VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
@@ -416,6 +428,11 @@ app.get('/api/progress/user/:user_id', async (req, res) => {
 //  HEALTH CHECK
 // ==========================================
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// --- Homepage ---
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // ==========================================
 //  START
