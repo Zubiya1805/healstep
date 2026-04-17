@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Healio — My Routine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    body { display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: var(--color-surface);
+      border-right: 1px solid rgba(255,255,255,0.05);
+      display: flex; flex-direction: column;
+      padding: var(--space-6);
+      position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
+    }
+    .sidebar-logo { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-10); }
+    .sidebar-logo-icon {
+      width: 38px; height: 38px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #00d4aa, #4fc3f7);
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+      box-shadow: 0 0 16px rgba(0,212,170,0.35);
+    }
+    .sidebar-logo-name { font-family: var(--font-display); font-size: 1.3rem; color: var(--color-text); }
+    .nav-section-label {
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--color-text-faint); margin: var(--space-6) 0 var(--space-2) var(--space-2);
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: 10px var(--space-4); border-radius: var(--radius-lg);
+      color: var(--color-text-muted); font-size: 0.875rem; font-weight: 500;
+      text-decoration: none; margin-bottom: 2px; transition: all var(--transition);
+    }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-item:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .nav-item.active { background: rgba(0,212,170,0.1); color: #00d4aa; }
+    .sidebar-bottom { margin-top: auto; }
+    .user-pill {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3); background: var(--color-surface-2);
+      border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-xl);
+    }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, #00d4aa, #4fc3f7);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem; color: #040d12; flex-shrink: 0;
+    }
+    .user-name { font-size: 0.85rem; font-weight: 600; color: var(--color-text); }
+    .user-sub  { font-size: 0.72rem; color: var(--color-text-muted); }
+
+    /* MAIN */
+    .main { margin-left: 240px; flex: 1; padding: var(--space-8) var(--space-10); }
+
+    @keyframes fade-up { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+
+    /* TOPBAR */
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-8); animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+    .topbar h1 { font-family: var(--font-display); font-size: clamp(1.5rem,2.5vw,2rem); color: var(--color-text); }
+    .topbar p  { font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--space-1); }
+
+    /* TAB SWITCHER */
+    .tab-bar {
+      display: flex; background: var(--color-surface);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: 4px; gap: 4px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 8px 20px; border-radius: var(--radius-lg);
+      font-size: 0.875rem; font-weight: 600; color: var(--color-text-muted);
+      transition: all var(--transition); cursor: pointer;
+    }
+    .tab-btn.active { background: var(--color-surface-3); color: #00d4aa; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .tab-btn:hover:not(.active) { color: var(--color-text); }
+
+    /* PROGRESS BAR */
+    .progress-bar-wrap { margin: var(--space-6) 0; animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+    .progress-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
+    .progress-label { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+    .progress-count { font-size: 0.82rem; color: var(--color-text-muted); }
+    .progress-track { height: 8px; background: var(--color-surface-2); border-radius: var(--radius-full); overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: var(--radius-full);
+      background: linear-gradient(90deg, #00d4aa, #4fc3f7);
+      box-shadow: 0 0 10px rgba(0,212,170,0.4);
+      transition: width 1s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    /* ROUTINE GRID */
+    .routine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+
+    .routine-section-title {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--color-text-muted);
+      margin: var(--space-6) 0 var(--space-4);
+      display: flex; align-items: center; gap: var(--space-3);
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+    }
+    .routine-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.05); }
+
+    /* MEAL CARD */
+    .meal-card {
+      background: var(--color-surface); border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: var(--space-5);
+      transition: all var(--transition); cursor: pointer;
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      position: relative; overflow: hidden;
+    }
+    .meal-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      border-radius: var(--radius-full) 0 0 var(--radius-full);
+    }
+    .meal-card.breakfast::before { background: #ffd166; }
+    .meal-card.lunch::before     { background: #00d4aa; }
+    .meal-card.snack::before     { background: #4fc3f7; }
+    .meal-card.dinner::before    { background: #7c3aed; }
+    .meal-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .meal-card.completed { opacity: 0.6; }
+    .meal-card.completed .meal-name { text-decoration: line-through; }
+
+    .meal-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-3); }
+    .meal-time-badge {
+      font-size: 0.7rem; font-weight: 700; padding: 3px 10px;
+      border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .breakfast .meal-time-badge { background: rgba(255,209,102,0.1); color: #ffd166; }
+    .lunch     .meal-time-badge { background: rgba(0,212,170,0.1);   color: #00d4aa; }
+    .snack     .meal-time-badge { background: rgba(79,195,247,0.1);  color: #4fc3f7; }
+    .dinner    .meal-time-badge { background: rgba(124,58,237,0.1);  color: #a78bfa; }
+
+    .meal-check {
+      width: 24px; height: 24px; border-radius: var(--radius-full);
+      border: 2px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition); flex-shrink: 0; cursor: pointer;
+    }
+    .meal-check.done { background: #00d4aa; border-color: #00d4aa; }
+    .meal-check.done::after { content: '✓'; font-size: 0.7rem; color: #040d12; font-weight: 900; }
+    .meal-check:hover:not(.done) { border-color: #00d4aa; }
+
+    .meal-name { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--space-2); }
+    .meal-desc { font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: var(--space-4); }
+
+    .meal-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .meal-tag {
+      font-size: 0.7rem; font-weight: 600; padding: 3px 10px;
+      border-radius: var(--radius-full);
+      background: var(--color-surface-2); color: var(--color-text-muted);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* EXERCISE CARD */
+    .exercise-card {
+      background: var(--color-surface); border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: var(--space-5);
+      transition: all var(--transition);
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      display: flex; gap: var(--space-4); align-items: flex-start;
+    }
+    .exercise-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .exercise-icon-wrap {
+      width: 48px; height: 48px; border-radius: var(--radius-xl);
+      background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 1.3rem;
+    }
+    .exercise-name { font-size: 0.95rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--space-1); }
+    .exercise-meta { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: var(--space-3); }
+    .exercise-bar { height: 4px; background: var(--color-surface-2); border-radius: var(--radius-full); overflow: hidden; }
+    .exercise-bar-fill {
+      height: 100%; border-radius: var(--radius-full);
+      background: linear-gradient(90deg, #00d4aa, #4fc3f7);
+      transition: width 1.2s cubic-bezier(0.16,1,0.3,1);
+    }
+    .exercise-intensity {
+      display: flex; justify-content: space-between;
+      font-size: 0.7rem; color: var(--color-text-faint); margin-top: 4px;
+    }
+
+    /* HIDDEN PANELS */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* MEDICINE CARD */
+    .medicine-card {
+      background: var(--color-surface); border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: var(--space-5);
+      display: flex; align-items: center; gap: var(--space-4);
+      transition: all var(--transition);
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      margin-bottom: var(--space-4);
+    }
+    .medicine-card:hover { transform: translateX(4px); }
+    .med-icon {
+      width: 44px; height: 44px; border-radius: var(--radius-xl);
+      background: rgba(79,195,247,0.1); border: 1px solid rgba(79,195,247,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .med-name  { font-size: 0.95rem; font-weight: 700; color: var(--color-text); }
+    .med-dose  { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px; }
+    .med-time  {
+      margin-left: auto; font-size: 0.78rem; font-weight: 700;
+      padding: 4px 12px; border-radius: var(--radius-full);
+      background: rgba(79,195,247,0.1); color: #4fc3f7; flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">+</div>
+      <div class="sidebar-logo-name">Healio</div>
+    </div>
+    <span class="nav-section-label">Main</span>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="upload-report.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Upload Report
+    </a>
+    <a href="routine.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      My Routine
+    </a>
+    <a href="progress.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Progress
+    </a>
+    <span class="nav-section-label">Account</span>
+    <a href="feedback.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Daily Feedback
+    </a>
+    <a href="#" id="logout-btn" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </a>
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">…</div>
+        <div>
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-sub" id="user-sub">Recovery Plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <h1>Today’s Routine</h1>
+        <p id="routine-subtitle">Loading your personalised plan…</p>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('food')">Food Plan</button>
+        <button class="tab-btn" onclick="switchTab('exercise')">Exercise</button>
+        <button class="tab-btn" onclick="switchTab('medicine')">Medicines</button>
+      </div>
+    </div>
+
+    <!-- AI ANALYSIS CARD -->
+    <div id="ai-analysis-wrap" style="display:none; margin-bottom: var(--space-6); animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.05s both;">
+      <div style="background: rgba(0,212,170,0.05); border: 1px solid rgba(0,212,170,0.2); border-radius: var(--radius-xl); padding: var(--space-6);">
+        <h3 style="font-size: 1rem; color: #00d4aa; margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+          Doctor's Note
+        </h3>
+        <p id="ai-analysis-text" style="font-size: 0.9rem; color: var(--color-text); line-height: 1.6;"></p>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress-bar-wrap">
+      <div class="progress-top">
+        <span class="progress-label">Today's Progress</span>
+        <span class="progress-count" id="progressCount">0 of 0 completed</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="mainProgress" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- FOOD TAB -->
+    <div class="tab-panel active" id="tab-food">
+      <div id="meal-container">
+        <div class="routine-section-title">Loading meals…</div>
+        <div class="routine-grid">
+          <div class="meal-card breakfast" style="min-height:120px;opacity:.4"></div>
+          <div class="meal-card snack"     style="min-height:120px;opacity:.4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXERCISE TAB -->
+    <div class="tab-panel" id="tab-exercise">
+      <div id="exercise-container">
+        <div class="routine-section-title">Loading exercises…</div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+          <div class="exercise-card" style="min-height:80px;opacity:.4"></div>
+          <div class="exercise-card" style="min-height:80px;opacity:.4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDICINE TAB -->
+    <div class="tab-panel" id="tab-medicine">
+      <div class="medicine-card" style="animation-delay:0.05s">
+        <div class="med-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="2"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="M22 22l-1.5-1.5"/></svg>
+        </div>
+        <div>
+          <div class="med-name">Aspirin 75mg</div>
+          <div class="med-dose">1 tablet · After breakfast · With water</div>
+        </div>
+        <span class="med-time">8:30 AM</span>
+      </div>
+      <div class="medicine-card" style="animation-delay:0.1s">
+        <div class="med-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="2"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="M22 22l-1.5-1.5"/></svg>
+        </div>
+        <div>
+          <div class="med-name">Atorvastatin 20mg</div>
+          <div class="med-dose">1 tablet · After breakfast · Cholesterol control</div>
+        </div>
+        <span class="med-time">8:30 AM</span>
+      </div>
+      <div class="routine-section-title">Night Medicines</div>
+      <div class="medicine-card" style="animation-delay:0.15s">
+        <div class="med-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="2"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="M22 22l-1.5-1.5"/></svg>
+        </div>
+        <div>
+          <div class="med-name">Metoprolol 25mg</div>
+          <div class="med-dose">1 tablet · After dinner · Blood pressure</div>
+        </div>
+        <span class="med-time">9:00 PM</span>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    // ── Tab switcher ─────────────────────────────────────────────────────────
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent.toLowerCase().includes(tab));
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ── Progress tracker ─────────────────────────────────────────────────────
+    let completed = 0, total = 0;
+    function toggleMeal(el) {
+      const wasDone = el.classList.contains('done');
+      el.classList.toggle('done');
+      el.closest('.meal-card').classList.toggle('completed', !wasDone);
+      completed += wasDone ? -1 : 1;
+      completed = Math.max(0, Math.min(total, completed));
+      document.getElementById('progressCount').textContent = completed + ' of ' + total + ' completed';
+      document.getElementById('mainProgress').style.width = (total ? (completed / total * 100) : 0) + '%';
+    }
+
+    // ── Meal card builder ────────────────────────────────────────────────────
+    const MEAL_META = {
+      breakfast:        { label: 'Breakfast',    time: '8:00 AM',  cls: 'breakfast' },
+      mid_morning_snack:{ label: 'Mid-Morning',  time: '10:30 AM', cls: 'snack'     },
+      lunch:            { label: 'Lunch',        time: '1:00 PM',  cls: 'lunch'     },
+      evening_snack:    { label: 'Evening Snack',time: '4:00 PM',  cls: 'snack'     },
+      dinner:           { label: 'Dinner',       time: '7:30 PM',  cls: 'dinner'    },
+      hydration:        { label: 'Hydration',    time: 'All Day',  cls: 'snack'     },
+    };
+
+    function buildMealCard(key, desc, delay) {
+      const m = MEAL_META[key] || { label: key, time: '', cls: 'snack' };
+      return `
+        <div class="meal-card ${m.cls}" style="animation-delay:${delay}s">
+          <div class="meal-top">
+            <span class="meal-time-badge">${m.time}</span>
+            <div class="meal-check" onclick="toggleMeal(this)"></div>
+          </div>
+          <div class="meal-name">${m.label}</div>
+          <div class="meal-desc">${desc}</div>
+          <div class="meal-tags"></div>
+        </div>`;
+    }
+
+    // ── Exercise card builder ────────────────────────────────────────────────
+    const INTENSITY_WIDTH = { low: '25%', moderate: '60%', high: '90%' };
+    const EXERCISE_ICONS  = [
+      `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+      `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>`,
+      `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>`,
+      `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>`,
+    ];
+
+    function buildExerciseCard(ex, idx) {
+      const intensity = (ex.intensity || 'low').toLowerCase();
+      const barWidth  = INTENSITY_WIDTH[intensity] || '30%';
+      const icon      = EXERCISE_ICONS[idx % EXERCISE_ICONS.length];
+      return `
+        <div class="exercise-card" style="animation-delay:${0.05 + idx * 0.07}s">
+          <div class="exercise-icon-wrap">${icon}</div>
+          <div style="flex:1">
+            <div class="exercise-name">${ex.name}</div>
+            <div class="exercise-meta">${ex.duration_minutes} min &middot; ${ex.intensity} intensity &middot; ${ex.instructions}</div>
+            <div class="exercise-bar"><div class="exercise-bar-fill" style="width:${barWidth}"></div></div>
+            <div class="exercise-intensity"><span>Rest</span><span>Low</span><span>Medium</span><span>High</span></div>
+          </div>
+        </div>`;
+    }
+
+    // ── Main loader ───────────────────────────────────────────────────────────
+    async function loadPlan() {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return; // auth.js handles redirect
+
+      try {
+        const res  = await fetch(`/api/recovery-plan/${userId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          // No plan yet — show CTA
+          document.getElementById('meal-container').innerHTML = `
+            <div style="text-align:center;padding:var(--space-12);">
+              <div style="font-size:3rem;margin-bottom:var(--space-4)">📄</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--color-text);margin-bottom:var(--space-2)">
+                No recovery plan yet
+              </div>
+              <div style="font-size:0.875rem;color:var(--color-text-muted);margin-bottom:var(--space-6)">
+                Upload a medical report and AI will generate your personalised plan.
+              </div>
+              <a href="upload-report.html" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:var(--radius-xl);background:linear-gradient(135deg,#00d4aa,#00b89a);color:#040d12;font-weight:700;text-decoration:none">
+                📤 Upload Report
+              </a>
+            </div>`;
+          document.getElementById('exercise-container').innerHTML = '';
+          return;
+        }
+
+        // ── Update subtitle ───────────────────────────────────────────────
+        const planDate = new Date(data.plan_date).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+        const surgery  = localStorage.getItem('user_surgery') || '';
+        document.getElementById('routine-subtitle').textContent =
+          planDate + (surgery ? ' · ' + surgery : '');
+
+        // ── Render AI Analysis ────────────────────────────────────────────
+        if (data.extracted_summary) {
+          document.getElementById('ai-analysis-wrap').style.display = 'block';
+          // Emphasize the historical comparison text if present
+          let formattedText = data.extracted_summary.replace(/Comparison:/g, '<br><br><strong style="color: #4fc3f7; font-size: 0.95rem;">Historical Comparison:</strong><br>');
+          document.getElementById('ai-analysis-text').innerHTML = formattedText;
+        } else {
+          document.getElementById('ai-analysis-wrap').style.display = 'none';
+        }
+
+        // ── Render meals ──────────────────────────────────────────────────
+        const meal  = data.meal_plan || {};
+        let mealHTML = '';
+        
+        if (meal.diet) {
+          const dietText = Array.isArray(meal.diet) ? meal.diet.map(i => '• ' + i).join('<br>') : meal.diet;
+          mealHTML = `
+            <div class="routine-section-title">Dietary Recommendations</div>
+            <div class="meal-card lunch" style="animation-delay:0.1s; display:block; width:100%;">
+              <div class="meal-top">
+                <span class="meal-time-badge">All Day</span>
+                <div class="meal-check" onclick="toggleMeal(this)"></div>
+              </div>
+              <div class="meal-name">Recovery Diet</div>
+              <div class="meal-desc" style="white-space: pre-wrap; font-size: 0.9rem;">${dietText}</div>
+            </div>`;
+        } else {
+          const ORDER = ['breakfast','mid_morning_snack','lunch','evening_snack','dinner','hydration'];
+          const SECTIONS = [
+            { title: 'Morning',        keys: ['breakfast','mid_morning_snack'] },
+            { title: 'Afternoon',      keys: ['lunch','evening_snack']         },
+            { title: 'Evening & Night',keys: ['dinner','hydration']            },
+          ];
+          let delay = 0.05;
+          SECTIONS.forEach(sec => {
+            const cards = sec.keys
+              .filter(k => meal[k])
+              .map(k => { const c = buildMealCard(k, meal[k], delay); delay += 0.05; return c; })
+              .join('');
+            if (cards) mealHTML += `
+              <div class="routine-section-title">${sec.title}</div>
+              <div class="routine-grid">${cards}</div>`;
+          });
+        }
+        document.getElementById('meal-container').innerHTML = mealHTML || '<p style="color:var(--color-text-muted);padding:var(--space-6)">No meal data in this plan.</p>';
+
+        // ── Render exercises ──────────────────────────────────────────────
+        const ex = data.exercise_plan || {};
+        let exHTML = '';
+
+        if (ex.exercise || ex.precautions) {
+          exHTML += `<div class="routine-section-title">Your Exercise Plan</div><div style="display:flex;flex-direction:column;gap:var(--space-4)">`;
+          if (ex.exercise) {
+            const exText = Array.isArray(ex.exercise) ? ex.exercise.map(i => '• ' + i).join('<br>') : ex.exercise;
+            exHTML += `
+              <div class="exercise-card" style="animation-delay:0.1s">
+                <div class="exercise-icon-wrap" style="background:rgba(79,195,247,0.1); border-color:rgba(79,195,247,0.2); color:#4fc3f7;">🏃</div>
+                <div style="flex:1">
+                  <div class="exercise-name">Recommended Activity</div>
+                  <div class="exercise-meta" style="margin-bottom:0; font-size:0.85rem; line-height:1.5;">${exText}</div>
+                </div>
+              </div>`;
+          }
+          if (ex.precautions && ex.precautions.length > 0) {
+            const preText = Array.isArray(ex.precautions) ? ex.precautions.map(i => '• ' + i).join('<br>') : ex.precautions;
+            exHTML += `
+              <div class="exercise-card" style="animation-delay:0.2s">
+                <div class="exercise-icon-wrap" style="background:rgba(239,71,111,0.1); border-color:rgba(239,71,111,0.2); color:#ef476f;">⚠️</div>
+                <div style="flex:1">
+                  <div class="exercise-name">Precautions</div>
+                  <div class="exercise-meta" style="margin-bottom:0; font-size:0.85rem; line-height:1.5;">${preText}</div>
+                </div>
+              </div>`;
+          }
+          exHTML += `</div>`;
+        } else if (Array.isArray(ex) && ex.length > 0) {
+          exHTML = `
+            <div class="routine-section-title">Your Exercise Plan</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+              ${ex.map((e, i) => buildExerciseCard(e, i)).join('')}
+            </div>`;
+        } else {
+          exHTML = '<p style="color:var(--color-text-muted);padding:var(--space-6)">No exercises in this plan.</p>';
+        }
+        document.getElementById('exercise-container').innerHTML = exHTML;
+
+        // ── Update progress tracker ───────────────────────────────────────
+        total = document.querySelectorAll('.meal-check').length;
+        completed = 0;
+        document.getElementById('progressCount').textContent = '0 of ' + total + ' completed';
+        document.getElementById('mainProgress').style.width  = '0%';
+
+      } catch (err) {
+        console.error('[routine] load error:', err);
+      }
+    }
+
+    // Fetch user's surgery type for subtitle, then load plan
+    (async () => {
+      const userId = localStorage.getItem('user_id');
+      if (userId) {
+        try {
+          const u = await fetch(`/api/users/${userId}`);
+          if (u.ok) {
+            const ud = await u.json();
+            if (ud.surgery_type) localStorage.setItem('user_surgery', ud.surgery_type);
+          }
+        } catch (_) {}
+      }
+      loadPlan();
+    })();
+  </script>
+</body>
+</html>

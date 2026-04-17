@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Healio — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { display: flex; min-height: 100vh; background: var(--color-bg); }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border-subtle);
+      display: flex; flex-direction: column;
+      padding: var(--space-6);
+      position: fixed; top: 0; left: 0; height: 100vh;
+      z-index: 100;
+    }
+    .sidebar-logo { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-10); }
+    .sidebar-logo-icon {
+      width: 38px; height: 38px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #00d4aa, #4fc3f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 0 16px rgba(0,212,170,0.35);
+    }
+    .sidebar-logo-name { font-family: var(--font-display); font-size: 1.3rem; color: var(--color-text); }
+
+    .nav-section-label {
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--color-text-faint); margin: var(--space-6) 0 var(--space-2) var(--space-2);
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: 10px var(--space-4); border-radius: var(--radius-lg);
+      color: var(--color-text-muted); font-size: 0.875rem; font-weight: 500;
+      text-decoration: none; margin-bottom: 2px;
+      transition: all var(--transition);
+    }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-item:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .nav-item.active { background: rgba(0,212,170,0.1); color: #00d4aa; }
+    .nav-item.active svg { stroke: #00d4aa; }
+
+    .sidebar-bottom { margin-top: auto; }
+    .user-pill {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3); background: var(--color-surface-2);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl);
+    }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, #00d4aa, #4fc3f7);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem; color: #040d12; flex-shrink: 0;
+    }
+    .user-name { font-size: 0.85rem; font-weight: 600; color: var(--color-text); }
+    .user-sub { font-size: 0.72rem; color: var(--color-text-muted); }
+
+    /* MAIN CONTENT */
+    .main { margin-left: 240px; flex: 1; padding: var(--space-8) var(--space-10); max-width: calc(100vw - 240px); }
+
+    /* TOP BAR */
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-8); }
+    .topbar-left h1 { font-family: var(--font-display); font-size: clamp(1.5rem,2.5vw,2rem); color: var(--color-text); }
+    .topbar-left p { font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--space-1); }
+    .day-badge {
+      background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.2);
+      border-radius: var(--radius-full); padding: 8px 20px;
+      font-size: 0.875rem; font-weight: 700; color: #00d4aa;
+      display: flex; align-items: center; gap: var(--space-2);
+    }
+    .day-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #00d4aa; animation: blink 1.5s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+    /* KPI GRID */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-8); }
+    .kpi-card {
+      background: var(--color-surface); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl); padding: var(--space-5);
+      transition: all var(--transition);
+      animation: fade-in-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .kpi-card:nth-child(1){animation-delay:0.05s}
+    .kpi-card:nth-child(2){animation-delay:0.1s}
+    .kpi-card:nth-child(3){animation-delay:0.15s}
+    .kpi-card:nth-child(4){animation-delay:0.2s}
+    @keyframes fade-in-up {
+      from{opacity:0;transform:translateY(16px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); border-color: rgba(0,212,170,0.2); }
+    .kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+    .kpi-icon {
+      width: 40px; height: 40px; border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    }
+    .kpi-icon.green { background: rgba(0,212,170,0.12); }
+    .kpi-icon.blue  { background: rgba(79,195,247,0.12); }
+    .kpi-icon.gold  { background: rgba(255,209,102,0.12); }
+    .kpi-icon.red   { background: rgba(239,71,111,0.12); }
+    .kpi-trend { font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: var(--radius-full); }
+    .kpi-trend.up   { background: rgba(0,212,170,0.1); color: #00d4aa; }
+    .kpi-trend.down { background: rgba(239,71,111,0.1); color: #ef476f; }
+    .kpi-trend.same { background: rgba(255,209,102,0.1); color: #ffd166; }
+    .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
+    .kpi-label { font-size: 0.8rem; color: var(--color-text-muted); margin-top: 2px; }
+
+    /* MAIN GRID */
+    .content-grid { display: grid; grid-template-columns: 1fr 340px; gap: var(--space-6); }
+
+    /* ACTION CARDS */
+    .section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4); }
+
+    .action-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6); }
+    .action-card {
+      background: var(--color-surface); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl); padding: var(--space-6);
+      text-decoration: none; transition: all var(--transition);
+      display: flex; flex-direction: column; gap: var(--space-3);
+      animation: fade-in-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      animation-delay: 0.25s;
+    }
+    .action-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+    .action-card.primary { border-color: rgba(0,212,170,0.25); background: rgba(0,212,170,0.04); }
+    .action-card.primary:hover { border-color: rgba(0,212,170,0.5); box-shadow: 0 12px 32px rgba(0,212,170,0.15); }
+    .action-card.secondary { border-color: rgba(79,195,247,0.2); background: rgba(79,195,247,0.03); }
+    .action-card.secondary:hover { border-color: rgba(79,195,247,0.4); box-shadow: 0 12px 32px rgba(79,195,247,0.1); }
+    .action-card-icon { font-size: 2rem; }
+    .action-card-title { font-size: 1.05rem; font-weight: 700; color: var(--color-text); }
+    .action-card-desc { font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.5; }
+    .action-card-cta {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      font-size: 0.82rem; font-weight: 600; margin-top: auto; padding-top: var(--space-2);
+    }
+    .action-card.primary .action-card-cta { color: #00d4aa; }
+    .action-card.secondary .action-card-cta { color: #4fc3f7; }
+
+    /* TODAY'S ROUTINE PREVIEW */
+    .routine-preview {
+      background: var(--color-surface); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl); padding: var(--space-6);
+      animation: fade-in-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+    }
+    .routine-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); }
+    .routine-header h3 { font-size: 1rem; font-weight: 700; color: var(--color-text); }
+    .view-all { font-size: 0.8rem; color: #00d4aa; font-weight: 600; text-decoration: none; }
+    .view-all:hover { text-decoration: underline; }
+
+    .routine-item {
+      display: flex; align-items: center; gap: var(--space-4);
+      padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .routine-item:last-child { border-bottom: none; }
+    .routine-item-icon {
+      width: 38px; height: 38px; border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .routine-item-text { flex: 1; }
+    .routine-item-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+    .routine-item-sub { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 1px; }
+    .routine-check {
+      width: 22px; height: 22px; border-radius: var(--radius-full);
+      border: 2px solid var(--color-border-subtle);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all var(--transition); flex-shrink: 0;
+    }
+    .routine-check.done { background: #00d4aa; border-color: #00d4aa; }
+    .routine-check.done::after { content: '✓'; font-size: 0.7rem; color: #040d12; font-weight: 800; }
+    .routine-check:hover:not(.done) { border-color: #00d4aa; }
+
+    /* SIDEBAR RIGHT */
+    .right-sidebar { display: flex; flex-direction: column; gap: var(--space-5); }
+
+    /* RECOVERY SCORE */
+    .score-card {
+      background: var(--color-surface); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl); padding: var(--space-6); text-align: center;
+      animation: fade-in-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+    }
+    .score-ring {
+      width: 120px; height: 120px; margin: 0 auto var(--space-4);
+      position: relative;
+    }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring-bg { fill: none; stroke: var(--color-surface-2); stroke-width: 8; }
+    .score-ring-fill {
+      fill: none; stroke: #00d4aa; stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 283;
+      stroke-dashoffset: 70;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.16,1,0.3,1);
+      filter: drop-shadow(0 0 6px rgba(0,212,170,0.5));
+    }
+    .score-number {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      font-size: 1.8rem; font-weight: 800; color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+    }
+    .score-label { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--space-1); }
+    .score-sub { font-size: 0.78rem; color: var(--color-text-muted); }
+    .score-trend { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin-top: var(--space-3); font-size: 0.8rem; color: #00d4aa; font-weight: 600; }
+
+    /* UPCOMING */
+    .upcoming-card {
+      background: var(--color-surface); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl); padding: var(--space-5);
+      animation: fade-in-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both;
+    }
+    .upcoming-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-subtle); }
+    .upcoming-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .upcoming-time { font-size: 0.72rem; color: var(--color-text-faint); width: 42px; flex-shrink: 0; font-weight: 600; }
+    .upcoming-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .upcoming-text { font-size: 0.82rem; color: var(--color-text-muted); }
+
+    /* ALERT CARD */
+    .alert-card {
+      background: rgba(0,212,170,0.05); border: 1px solid rgba(0,212,170,0.2);
+      border-radius: var(--radius-xl); padding: var(--space-5);
+      animation: fade-in-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.35s both;
+    }
+    .alert-title { font-size: 0.82rem; font-weight: 700; color: #00d4aa; margin-bottom: var(--space-2); display: flex; align-items: center; gap: var(--space-2); }
+    .alert-text { font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.5; }
+    .alert-btn {
+      display: inline-block; margin-top: var(--space-3);
+      padding: 7px 16px; background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.25);
+      border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 600; color: #00d4aa;
+      text-decoration: none; transition: all var(--transition);
+    }
+    .alert-btn:hover { background: rgba(0,212,170,0.2); }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">💊</div>
+      <div class="sidebar-logo-name">Healio</div>
+    </div>
+
+    <span class="nav-section-label">Main</span>
+    <a href="dashboard.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="upload-report.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Upload Report
+    </a>
+    <a href="routine.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      My Routine
+    </a>
+    <a href="progress.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Progress
+    </a>
+
+    <span class="nav-section-label">Account</span>
+    <a href="feedback.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Daily Feedback
+    </a>
+    <a href="#" id="logout-btn" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </a>
+
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">…</div>
+        <div>
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-sub" id="user-sub">Recovery Plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 id="user-greeting">Good Evening 👋</h1>
+        <p>Friday, 17 April 2026 · Your recovery is on track</p>
+      </div>
+      <div class="day-badge">
+        <span class="day-badge-dot"></span>
+        Day 12 of Recovery
+      </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon green">💪</div>
+          <span class="kpi-trend up">↑ 8%</span>
+        </div>
+        <div class="kpi-value">78</div>
+        <div class="kpi-label">Recovery Score</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon blue">📋</div>
+          <span class="kpi-trend up">+1 new</span>
+        </div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-label">Reports Uploaded</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon gold">🥗</div>
+          <span class="kpi-trend same">Today</span>
+        </div>
+        <div class="kpi-value">85%</div>
+        <div class="kpi-label">Routine Followed</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon red">❤️</div>
+          <span class="kpi-trend up">Normal</span>
+        </div>
+        <div class="kpi-value">72</div>
+        <div class="kpi-label">Resting Heart Rate</div>
+      </div>
+    </div>
+
+    <!-- CONTENT GRID -->
+    <div class="content-grid">
+      <div>
+        <!-- ACTION CARDS -->
+        <div class="section-title">Quick Actions</div>
+        <div class="action-cards">
+          <a href="upload-report.html" class="action-card primary">
+            <div class="action-card-icon">📤</div>
+            <div class="action-card-title">Upload New Report</div>
+            <div class="action-card-desc">Upload your latest blood or diagnostic report and get instant AI analysis.</div>
+            <div class="action-card-cta">Upload now →</div>
+          </a>
+          <a href="routine.html" class="action-card secondary">
+            <div class="action-card-icon">🏃</div>
+            <div class="action-card-title">View Today's Routine</div>
+            <div class="action-card-desc">Your personalised food and exercise plan for today based on your latest report.</div>
+            <div class="action-card-cta">View routine →</div>
+          </a>
+        </div>
+
+        <!-- ROUTINE PREVIEW -->
+        <div class="routine-preview">
+          <div class="routine-header">
+            <h3>Today's Routine</h3>
+            <a href="routine.html" class="view-all">View all →</a>
+          </div>
+          <div class="routine-item">
+            <div class="routine-item-icon" style="background:rgba(255,209,102,0.12)">🌅</div>
+            <div class="routine-item-text">
+              <div class="routine-item-title">Morning — Poha with vegetables</div>
+              <div class="routine-item-sub">Low sodium · High iron · Easy to digest</div>
+            </div>
+            <div class="routine-check done" onclick="toggleCheck(this)"></div>
+          </div>
+          <div class="routine-item">
+            <div class="routine-item-icon" style="background:rgba(0,212,170,0.1)">🚶</div>
+            <div class="routine-item-text">
+              <div class="routine-item-title">10-min gentle walk</div>
+              <div class="routine-item-sub">Light cardio · Safe post-surgery</div>
+            </div>
+            <div class="routine-check done" onclick="toggleCheck(this)"></div>
+          </div>
+          <div class="routine-item">
+            <div class="routine-item-icon" style="background:rgba(79,195,247,0.1)">☀️</div>
+            <div class="routine-item-text">
+              <div class="routine-item-title">Lunch — Dal, rice, curd</div>
+              <div class="routine-item-sub">Protein · Probiotics · Heart-safe</div>
+            </div>
+            <div class="routine-check" onclick="toggleCheck(this)"></div>
+          </div>
+          <div class="routine-item">
+            <div class="routine-item-icon" style="background:rgba(124,58,237,0.1)">🌙</div>
+            <div class="routine-item-text">
+              <div class="routine-item-title">Dinner — Khichdi with ghee</div>
+              <div class="routine-item-sub">Light · Easy digestion · Sleep-friendly</div>
+            </div>
+            <div class="routine-check" onclick="toggleCheck(this)"></div>
+          </div>
+        </div>
+
+        <!-- RECOVERY CHART CARD -->
+        <div class="chart-card" style="margin-top: var(--space-6); background: var(--color-surface); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-xl); padding: var(--space-6);">
+          <div class="section-title">7-Day Progress</div>
+          <div id="chart-container" style="position: relative; height: 300px; width: 100%;">
+            <canvas id="recoveryChart"></canvas>
+            <div id="chart-placeholder" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; align-items: center; justify-content: center; text-align: center; color: var(--color-text-muted); padding: var(--space-6);">
+              Your recovery chart will appear here once you start tracking your daily feedback!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDEBAR -->
+      <div class="right-sidebar">
+
+        <!-- RECOVERY SCORE RING -->
+        <div class="score-card">
+          <div class="section-title">Recovery Score</div>
+          <div class="score-ring">
+            <svg width="120" height="120" viewBox="0 0 100 100">
+              <circle class="score-ring-bg" cx="50" cy="50" r="45"/>
+              <circle class="score-ring-fill" cx="50" cy="50" r="45" id="scoreRing"/>
+            </svg>
+            <div class="score-number" id="scoreNum">0</div>
+          </div>
+          <div class="score-label">Good Recovery</div>
+          <div class="score-sub">Based on 3 reports + daily logs</div>
+          <div class="score-trend">↑ +8 points this week</div>
+        </div>
+
+        <!-- SCHEDULE -->
+        <div class="upcoming-card">
+          <div class="section-title">Today's Schedule</div>
+          <div class="upcoming-item">
+            <span class="upcoming-time">8:00</span>
+            <span class="upcoming-dot" style="background:#ffd166"></span>
+            <span class="upcoming-text">Morning walk + Poha</span>
+          </div>
+          <div class="upcoming-item">
+            <span class="upcoming-time">10:00</span>
+            <span class="upcoming-dot" style="background:#4fc3f7"></span>
+            <span class="upcoming-text">Medicines + hydration</span>
+          </div>
+          <div class="upcoming-item">
+            <span class="upcoming-time">13:00</span>
+            <span class="upcoming-dot" style="background:#00d4aa"></span>
+            <span class="upcoming-text">Lunch — Dal rice curd</span>
+          </div>
+          <div class="upcoming-item">
+            <span class="upcoming-time">17:00</span>
+            <span class="upcoming-dot" style="background:#7c3aed"></span>
+            <span class="upcoming-text">Evening breathing exercise</span>
+          </div>
+          <div class="upcoming-item">
+            <span class="upcoming-time">20:00</span>
+            <span class="upcoming-dot" style="background:#ef476f"></span>
+            <span class="upcoming-text">Dinner + feedback log</span>
+          </div>
+        </div>
+
+        <!-- AI ALERT -->
+        <div class="alert-card">
+          <div class="alert-title">🤖 AI Insight</div>
+          <div class="alert-text">Your haemoglobin has improved from 9.2 → 11.4 over 3 reports. Keep eating iron-rich foods like palak and ragi for 2 more weeks.</div>
+          <a href="progress.html" class="alert-btn">View Progress →</a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    // Render Chart.js
+    function renderChart(records) {
+      const ctx = document.getElementById('recoveryChart').getContext('2d');
+      const placeholder = document.getElementById('chart-placeholder');
+      
+      if (!records || records.length === 0) {
+        document.getElementById('recoveryChart').style.display = 'none';
+        placeholder.style.display = 'flex';
+        return;
+      }
+      
+      document.getElementById('recoveryChart').style.display = 'block';
+      placeholder.style.display = 'none';
+
+      // Prepare data
+      const labels = records.map(r => {
+        const d = new Date(r.date);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+
+      const dataPoints = records.map(r => {
+        const diet = typeof r.completed_diet_items === 'string' ? JSON.parse(r.completed_diet_items) : (r.completed_diet_items || []);
+        const ex = typeof r.completed_exercise_items === 'string' ? JSON.parse(r.completed_exercise_items) : (r.completed_exercise_items || []);
+        const completed = (diet ? diet.length : 0) + (ex ? ex.length : 0);
+        return Math.min(100, Math.round((completed / 4) * 100)); // assuming 4 tasks max
+      });
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Recovery Score %',
+            data: dataPoints,
+            borderColor: '#00d4aa',
+            backgroundColor: 'rgba(0, 212, 170, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#040d12',
+            pointBorderColor: '#00d4aa',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#8892b0' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#8892b0' }
+            }
+          }
+        }
+      });
+    }
+
+    // Fetch and animate score counter
+    async function loadRecoveryScore() {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
+
+      try {
+        const res = await fetch(`/api/progress/${userId}`);
+        const data = await res.json();
+        const target = data.score || 0;
+        
+        // Update sub label
+        if (data.records && data.records.length > 0) {
+          document.querySelector('.score-sub').textContent = `Based on ${data.records.length} daily log(s)`;
+        } else {
+          document.querySelector('.score-sub').textContent = 'No daily logs yet';
+        }
+        
+        renderChart(data.records);
+
+        const scoreEl = document.getElementById('scoreNum');
+        const ringEl = document.getElementById('scoreRing');
+        const circumference = 283;
+        let current = 0;
+        
+        if (target === 0) {
+           scoreEl.textContent = '0';
+           ringEl.style.strokeDashoffset = circumference;
+           return;
+        }
+
+        const interval = setInterval(() => {
+          current += 2;
+          if (current >= target) { current = target; clearInterval(interval); }
+          scoreEl.textContent = current;
+          const offset = circumference - (current / 100) * circumference;
+          ringEl.style.strokeDashoffset = offset;
+        }, 20);
+
+      } catch (err) {
+        console.error('Failed to load score:', err);
+      }
+    }
+    
+    loadRecoveryScore();
+
+    // Toggle routine checkboxes
+    function toggleCheck(el) {
+      el.classList.toggle('done');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Healio — Progress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body { display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: var(--color-surface);
+      border-right: 1px solid rgba(255,255,255,0.05);
+      display: flex; flex-direction: column;
+      padding: var(--space-6);
+      position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
+    }
+    .sidebar-logo { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-10); }
+    .sidebar-logo-icon {
+      width: 38px; height: 38px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #00d4aa, #4fc3f7);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1.1rem; color: #040d12;
+      box-shadow: 0 0 16px rgba(0,212,170,0.35);
+    }
+    .sidebar-logo-name { font-family: var(--font-display); font-size: 1.3rem; color: var(--color-text); }
+    .nav-section-label {
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--color-text-faint); margin: var(--space-6) 0 var(--space-2) var(--space-2);
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: 10px var(--space-4); border-radius: var(--radius-lg);
+      color: var(--color-text-muted); font-size: 0.875rem; font-weight: 500;
+      text-decoration: none; margin-bottom: 2px; transition: all var(--transition);
+    }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-item:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .nav-item.active { background: rgba(0,212,170,0.1); color: #00d4aa; }
+    .sidebar-bottom { margin-top: auto; }
+    .user-pill {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3); background: var(--color-surface-2);
+      border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-xl);
+    }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, #00d4aa, #4fc3f7);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem; color: #040d12; flex-shrink: 0;
+    }
+    .user-name { font-size: 0.85rem; font-weight: 600; color: var(--color-text); }
+    .user-sub  { font-size: 0.72rem; color: var(--color-text-muted); }
+
+    /* MAIN */
+    .main { margin-left: 240px; flex: 1; padding: var(--space-8) var(--space-10); }
+    @keyframes fade-up { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+
+    .page-header { margin-bottom: var(--space-8); animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+    .page-header h1 { font-family: var(--font-display); font-size: clamp(1.5rem,2.5vw,2rem); color: var(--color-text); }
+    .page-header p  { font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--space-1); }
+
+    /* KPI CARDS */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4); margin-bottom: var(--space-6);
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.05s both;
+    }
+    .kpi-card {
+      background: var(--color-surface);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: var(--space-5);
+      position: relative; overflow: hidden;
+    }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .kpi-card.teal::before   { background: linear-gradient(90deg,#00d4aa,#4fc3f7); }
+    .kpi-card.blue::before   { background: linear-gradient(90deg,#4fc3f7,#7c3aed); }
+    .kpi-card.gold::before   { background: linear-gradient(90deg,#ffd166,#ff9f43); }
+    .kpi-card.purple::before { background: linear-gradient(90deg,#7c3aed,#a78bfa); }
+    .kpi-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--color-text-muted); margin-bottom: var(--space-3); }
+    .kpi-value { font-size: 2rem; font-weight: 900; color: var(--color-text);
+      font-variant-numeric: tabular-nums; line-height: 1; }
+    .kpi-unit  { font-size: 1rem; font-weight: 500; color: var(--color-text-muted); margin-left: 2px; }
+    .kpi-change {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.75rem; font-weight: 700; margin-top: var(--space-2);
+      padding: 2px 8px; border-radius: var(--radius-full);
+    }
+    .kpi-change.up   { background: rgba(0,212,170,0.1); color: #00d4aa; }
+    .kpi-change.down { background: rgba(239,71,111,0.1); color: #ef476f; }
+
+    /* CHARTS ROW */
+    .charts-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--space-5); margin-bottom: var(--space-5);
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+    }
+    .chart-card {
+      background: var(--color-surface);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: var(--space-6);
+    }
+    .chart-title {
+      font-size: 0.85rem; font-weight: 700; color: var(--color-text);
+      margin-bottom: var(--space-5); display: flex; align-items: center;
+      justify-content: space-between;
+    }
+    .chart-badge {
+      font-size: 0.7rem; font-weight: 600; padding: 3px 10px;
+      border-radius: var(--radius-full);
+      background: rgba(0,212,170,0.1); color: #00d4aa;
+    }
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* REPORT COMPARISON */
+    .compare-card {
+      background: var(--color-surface);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: var(--space-6);
+      margin-bottom: var(--space-5);
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+    }
+    .compare-title {
+      font-size: 0.85rem; font-weight: 700; color: var(--color-text);
+      margin-bottom: var(--space-6);
+    }
+    .compare-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-4); }
+    .compare-item {
+      background: var(--color-surface-2);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: var(--radius-xl); padding: var(--space-4);
+      text-align: center;
+    }
+    .compare-name { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: var(--space-3); }
+    .compare-values { display: flex; align-items: center; justify-content: center; gap: var(--space-3); }
+    .val-old { font-size: 1rem; font-weight: 700; color: var(--color-text-faint); text-decoration: line-through; }
+    .val-arrow { color: var(--color-text-faint); font-size: 0.8rem; }
+    .val-new  { font-size: 1.1rem; font-weight: 800; }
+    .val-new.good { color: #00d4aa; }
+    .val-new.warn { color: #ffd166; }
+    .val-new.bad  { color: #ef476f; }
+    .compare-label { font-size: 0.7rem; margin-top: var(--space-2); font-weight: 600; padding: 2px 8px;
+      border-radius: var(--radius-full); display: inline-block; }
+    .compare-label.good   { background: rgba(0,212,170,0.1); color: #00d4aa; }
+    .compare-label.warn   { background: rgba(255,209,102,0.1); color: #ffd166; }
+    .compare-label.bad    { background: rgba(239,71,111,0.1); color: #ef476f; }
+
+    /* TIMELINE */
+    .timeline-card {
+      background: var(--color-surface);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl); padding: var(--space-6);
+      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both;
+    }
+    .timeline { position: relative; padding-left: var(--space-8); }
+    .timeline::before {
+      content: ''; position: absolute; left: 10px; top: 0; bottom: 0;
+      width: 2px; background: rgba(255,255,255,0.06);
+    }
+    .timeline-item { position: relative; margin-bottom: var(--space-6); }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute; left: -30px; top: 4px;
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.55rem; font-weight: 900;
+      background: var(--color-surface);
+    }
+    .timeline-dot.done   { border-color: #00d4aa; color: #00d4aa; }
+    .timeline-dot.active { border-color: #4fc3f7; color: #4fc3f7; box-shadow: 0 0 10px rgba(79,195,247,0.4); }
+    .timeline-dot.future { border-color: rgba(255,255,255,0.1); color: var(--color-text-faint); }
+    .timeline-date { font-size: 0.72rem; color: var(--color-text-faint); margin-bottom: 4px; }
+    .timeline-event { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
+    .timeline-sub { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">+</div>
+      <div class="sidebar-logo-name">Healio</div>
+    </div>
+    <span class="nav-section-label">Main</span>
+    <a href="dashboard.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="upload-report.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Upload Report
+    </a>
+    <a href="routine.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      My Routine
+    </a>
+    <a href="progress.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Progress
+    </a>
+    <span class="nav-section-label">Account</span>
+    <a href="feedback.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Daily Feedback
+    </a>
+    <a href="index.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </a>
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-avatar">RK</div>
+        <div>
+          <div class="user-name">Ravi Kumar</div>
+          <div class="user-sub">Heart Recovery</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="page-header">
+      <h1>Recovery Progress</h1>
+      <p>Day 12 of Recovery · Heart Surgery · Discharged 5 April 2026</p>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card teal">
+        <div class="kpi-label">Recovery Score</div>
+        <div class="kpi-value">72<span class="kpi-unit">/100</span></div>
+        <span class="kpi-change up">↑ +8 this week</span>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">Avg Feeling</div>
+        <div class="kpi-value">7.2<span class="kpi-unit">/10</span></div>
+        <span class="kpi-change up">↑ +1.4 vs last week</span>
+      </div>
+      <div class="kpi-card gold">
+        <div class="kpi-label">Plan Compliance</div>
+        <div class="kpi-value">78<span class="kpi-unit">%</span></div>
+        <span class="kpi-change up">↑ +12% this week</span>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">Check-in Streak</div>
+        <div class="kpi-value">5<span class="kpi-unit"> days</span></div>
+        <span class="kpi-change up">↑ Personal best!</span>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">
+          Feeling Score — Last 12 Days
+          <span class="chart-badge">Improving</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="feelingChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">
+          Plan Compliance — Last 12 Days
+          <span class="chart-badge">78% avg</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="complianceChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORT COMPARISON -->
+    <div class="compare-card">
+      <div class="compare-title">
+        Report Comparison — March 6 vs April 10, 2026
+      </div>
+      <div class="compare-grid">
+        <div class="compare-item">
+          <div class="compare-name">Haemoglobin (g/dL)</div>
+          <div class="compare-values">
+            <span class="val-old">9.8</span>
+            <span class="val-arrow">→</span>
+            <span class="val-new good">11.4</span>
+          </div>
+          <span class="compare-label good">Improved</span>
+        </div>
+        <div class="compare-item">
+          <div class="compare-name">Total Cholesterol</div>
+          <div class="compare-values">
+            <span class="val-old">218</span>
+            <span class="val-arrow">→</span>
+            <span class="val-new good">194</span>
+          </div>
+          <span class="compare-label good">Improved</span>
+        </div>
+        <div class="compare-item">
+          <div class="compare-name">Blood Pressure</div>
+          <div class="compare-values">
+            <span class="val-old">148/92</span>
+            <span class="val-arrow">→</span>
+            <span class="val-new good">132/84</span>
+          </div>
+          <span class="compare-label good">Better</span>
+        </div>
+        <div class="compare-item">
+          <div class="compare-name">Vitamin D (ng/mL)</div>
+          <div class="compare-values">
+            <span class="val-old">14</span>
+            <span class="val-arrow">→</span>
+            <span class="val-new warn">22</span>
+          </div>
+          <span class="compare-label warn">Watch</span>
+        </div>
+        <div class="compare-item">
+          <div class="compare-name">Blood Sugar (mg/dL)</div>
+          <div class="compare-values">
+            <span class="val-old">142</span>
+            <span class="val-arrow">→</span>
+            <span class="val-new good">118</span>
+          </div>
+          <span class="compare-label good">Improved</span>
+        </div>
+        <div class="compare-item">
+          <div class="compare-name">Creatinine (mg/dL)</div>
+          <div class="compare-values">
+            <span class="val-old">1.1</span>
+            <span class="val-arrow">→</span>
+            <span class="val-new good">0.9</span>
+          </div>
+          <span class="compare-label good">Normal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="timeline-card">
+      <div class="compare-title" style="margin-bottom:var(--space-6)">Recovery Timeline</div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot done">✓</div>
+          <div class="timeline-date">6 March 2026</div>
+          <div class="timeline-event">Hospital Discharge</div>
+          <div class="timeline-sub">Discharged after successful bypass surgery. Initial plan generated.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot done">✓</div>
+          <div class="timeline-date">8 March 2026</div>
+          <div class="timeline-event">First Report Uploaded</div>
+          <div class="timeline-sub">Blood CBC and cardiac markers uploaded. Recovery plan activated.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot done">✓</div>
+          <div class="timeline-date">14 March 2026</div>
+          <div class="timeline-event">First Completed Day</div>
+          <div class="timeline-sub">100% plan compliance for the first time. Feeling score 7/10.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot done">✓</div>
+          <div class="timeline-date">2 April 2026</div>
+          <div class="timeline-event">Exercise Upgraded</div>
+          <div class="timeline-sub">AI increased walk duration to 12 minutes based on consistent high scores.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot done">✓</div>
+          <div class="timeline-date">10 April 2026</div>
+          <div class="timeline-event">Second Report — Improvement Confirmed</div>
+          <div class="timeline-sub">Haemoglobin up, cholesterol down. Plan updated to reflect progress.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot active">●</div>
+          <div class="timeline-date">17 April 2026 · Today</div>
+          <div class="timeline-event">Day 12 — On Track</div>
+          <div class="timeline-sub">5-day check-in streak. Recovery score 72/100. Progressing well.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot future">○</div>
+          <div class="timeline-date">~1 May 2026 · Upcoming</div>
+          <div class="timeline-event">Target: Full Mobility Restored</div>
+          <div class="timeline-sub">Goal is 20-minute walks and full meal plan compliance at 90%+.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const chartDefaults = {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#797876', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#797876', font: { size: 11 } } }
+      }
+    };
+
+    // FEELING CHART
+    new Chart(document.getElementById('feelingChart'), {
+      type: 'line',
+      data: {
+        labels: ['D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12'],
+        datasets: [{
+          data: [3, 4, 4, 5, 5, 6, 6, 7, 6, 7, 8, 7],
+          borderColor: '#00d4aa',
+          backgroundColor: 'rgba(0,212,170,0.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#00d4aa',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 0, max: 10 } } }
+    });
+
+    // COMPLIANCE CHART
+    new Chart(document.getElementById('complianceChart'), {
+      type: 'bar',
+      data: {
+        labels: ['D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12'],
+        datasets: [{
+          data: [40, 55, 50, 65, 70, 75, 80, 85, 75, 90, 85, 80],
+          backgroundColor: (ctx) => {
+            const v = ctx.raw;
+            return v >= 80 ? 'rgba(0,212,170,0.7)' : v >= 60 ? 'rgba(79,195,247,0.6)' : 'rgba(255,209,102,0.6)';
+          },
+          borderRadius: 6, borderSkipped: false
+        }]
+      },
+      options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 0, max: 100 } } }
+    });
+  </script>
+</body>
+</html>

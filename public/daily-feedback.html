@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Healio — Daily Feedback</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    body { display: flex; min-height: 100vh; }
+    
+    /* SIDEBAR (minimal version for styling) */
+    .sidebar { width: 240px; background: var(--color-surface); border-right: 1px solid rgba(255,255,255,0.05); padding: var(--space-6); position: fixed; top: 0; left: 0; height: 100vh; }
+    .sidebar-logo { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-10); }
+    .sidebar-logo-icon { width: 38px; height: 38px; border-radius: var(--radius-md); background: linear-gradient(135deg, #00d4aa, #4fc3f7); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .sidebar-logo-name { font-family: var(--font-display); font-size: 1.3rem; color: var(--color-text); }
+    .nav-item { display: flex; align-items: center; gap: var(--space-3); padding: 10px var(--space-4); border-radius: var(--radius-lg); color: var(--color-text-muted); font-size: 0.875rem; font-weight: 500; text-decoration: none; margin-bottom: 2px; }
+    .nav-item.active { background: rgba(0,212,170,0.1); color: #00d4aa; }
+
+    /* MAIN */
+    .main { margin-left: 240px; flex: 1; padding: var(--space-8) var(--space-10); }
+    
+    .topbar h1 { font-family: var(--font-display); font-size: 2rem; color: var(--color-text); }
+    .topbar p { font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--space-1); }
+    
+    .feedback-form { background: var(--color-surface); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-xl); padding: var(--space-6); margin-top: var(--space-6); max-width: 600px; }
+    
+    .section-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin: var(--space-5) 0 var(--space-3); }
+    
+    .checkbox-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .checkbox-item { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface-2); border-radius: var(--radius-lg); cursor: pointer; transition: all var(--transition); border: 1px solid transparent; }
+    .checkbox-item:hover { border-color: rgba(0,212,170,0.3); }
+    .checkbox-item.selected { background: rgba(0,212,170,0.05); border-color: #00d4aa; }
+    
+    .checkbox-input { width: 20px; height: 20px; accent-color: #00d4aa; margin-top: 2px; cursor: pointer; }
+    .checkbox-label { font-size: 0.9rem; color: var(--color-text); line-height: 1.4; flex: 1; }
+    
+    .form-group { margin-top: var(--space-6); }
+    .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--color-text); margin-bottom: var(--space-2); }
+    .form-select { width: 100%; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--color-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--color-text); font-family: inherit; font-size: 0.9rem; }
+    .form-select:focus { outline: none; border-color: #00d4aa; }
+    
+    .btn-submit { margin-top: var(--space-8); width: 100%; padding: 14px; background: linear-gradient(135deg, #00d4aa, #4fc3f7); color: #040d12; font-weight: 700; font-size: 1rem; border: none; border-radius: var(--radius-lg); cursor: pointer; transition: opacity 0.2s; }
+    .btn-submit:hover { opacity: 0.9; }
+    
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">+</div>
+      <div class="sidebar-logo-name">Healio</div>
+    </div>
+    <a href="dashboard.html" class="nav-item">Dashboard</a>
+    <a href="routine.html" class="nav-item">My Routine</a>
+    <a href="daily-feedback.html" class="nav-item active">Daily Feedback</a>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>Daily Feedback</h1>
+      <p>Log your daily progress to track your recovery.</p>
+    </div>
+
+    <div class="feedback-form" id="feedback-form">
+      <div id="loading">Loading your plan...</div>
+      
+      <div id="form-content" style="display: none;">
+        <div class="section-title">Dietary Checklist</div>
+        <div class="checkbox-list" id="diet-list">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="section-title">Exercise Checklist</div>
+        <div class="checkbox-list" id="exercise-list">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">How are you feeling today?</label>
+          <select id="health-status" class="form-select">
+            <option value="Feeling great, no pain">Feeling great, no pain</option>
+            <option value="Doing okay, minor discomfort">Doing okay, minor discomfort</option>
+            <option value="Feeling tired or fatigued">Feeling tired or fatigued</option>
+            <option value="Experiencing significant pain">Experiencing significant pain</option>
+          </select>
+        </div>
+
+        <button class="btn-submit" onclick="submitFeedback()">Submit Today's Progress</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    async function loadPlanForFeedback() {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
+
+      try {
+        const res = await fetch(`/api/recovery-plan/${userId}`);
+        if (!res.ok) {
+          document.getElementById('loading').innerHTML = 'No recovery plan found. Please upload a report first.';
+          return;
+        }
+        
+        const data = await res.json();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('form-content').style.display = 'block';
+
+        // Parse diet and exercise into checkboxes
+        // Since AI format is single string now, we will split by sentences or just show one big checkbox.
+        // Let's just create one checkbox for the whole Diet block, and one for Exercise.
+        
+        const dietData = data.meal_plan?.diet || 'General diet plan';
+        const dietText = Array.isArray(dietData) ? dietData.join(', ') : dietData;
+
+        const dietHtml = `
+          <label class="checkbox-item" onclick="this.classList.toggle('selected')">
+            <input type="checkbox" class="checkbox-input" value="diet" id="diet-check">
+            <span class="checkbox-label">Followed Dietary Recommendations<br><small style="color:var(--color-text-muted)">${dietText}</small></span>
+          </label>
+        `;
+        document.getElementById('diet-list').innerHTML = dietHtml;
+
+        const ex = data.exercise_plan || {};
+        const exData = ex.exercise || 'General exercise';
+        const exText = Array.isArray(exData) ? exData.join(', ') : exData;
+        
+        let exHtml = `
+          <label class="checkbox-item" onclick="this.classList.toggle('selected')">
+            <input type="checkbox" class="checkbox-input" value="exercise" id="exercise-check">
+            <span class="checkbox-label">Completed Recommended Exercises<br><small style="color:var(--color-text-muted)">${exText}</small></span>
+          </label>
+        `;
+
+        if (ex.precautions && (!Array.isArray(ex.precautions) || ex.precautions.length > 0)) {
+          const preText = Array.isArray(ex.precautions) ? ex.precautions.join(', ') : ex.precautions;
+          exHtml += `
+          <label class="checkbox-item" onclick="this.classList.toggle('selected')">
+            <input type="checkbox" class="checkbox-input" value="precautions" id="precautions-check">
+            <span class="checkbox-label">Followed Precautions<br><small style="color:var(--color-text-muted)">${preText}</small></span>
+          </label>`;
+        }
+        document.getElementById('exercise-list').innerHTML = exHtml;
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function submitFeedback() {
+      const userId = localStorage.getItem('user_id');
+      
+      const dietChecked = document.getElementById('diet-check')?.checked ? ['Dietary Recommendations'] : [];
+      const exerciseChecked = [];
+      if (document.getElementById('exercise-check')?.checked) exerciseChecked.push('Recommended Exercises');
+      if (document.getElementById('precautions-check')?.checked) exerciseChecked.push('Precautions');
+      
+      const healthStatus = document.getElementById('health-status').value;
+
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            completed_diet_items: dietChecked,
+            completed_exercise_items: exerciseChecked,
+            health_status: healthStatus
+          })
+        });
+
+        if (res.ok) {
+          alert('Progress saved successfully!');
+          window.location.href = 'dashboard.html';
+        } else {
+          const err = await res.json();
+          alert('Error: ' + err.error);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to save progress.');
+      }
+    }
+
+    loadPlanForFeedback();
+  </script>
+</body>
+</html>
