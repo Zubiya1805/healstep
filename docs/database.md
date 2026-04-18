@@ -1,6 +1,6 @@
-# Healio Database Architecture
+# HealStep Database Architecture
 
-This document outlines the PostgreSQL database schema for the Healio (recover-right) application. The database is designed to securely manage patient data, link medical reports to actionable recovery plans, and track daily progress.
+This document outlines the PostgreSQL database schema for the HealStep (recover-right) application. The database is designed to securely manage patient data, link medical reports to actionable recovery plans, and track daily progress.
 
 ## Tables
 

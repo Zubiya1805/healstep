@@ -1,6 +1,6 @@
-# Healio Project Structure Guide
+# HealStep Project Structure Guide
 
-This document provides a comprehensive overview of the Healio (recover-right) project directory. It is designed to help new developers quickly understand the architecture, navigation, and purpose of each component within the codebase.
+This document provides a comprehensive overview of the HealStep (recover-right) project directory. It is designed to help new developers quickly understand the architecture, navigation, and purpose of each component within the codebase.
 
 ---
 
@@ -8,7 +8,7 @@ This document provides a comprehensive overview of the Healio (recover-right) pr
 The `public/` folder contains all the static assets and HTML files served to the client. This is the user-facing side of the application.
 
 - **`public/`** — The root folder for frontend static files served by Express.
-- **`public/css/`** — Contains stylesheets like `base.css` which define the design system, animations, and typography (e.g., the neon-green Healio theme).
+- **`public/css/`** — Contains stylesheets like `base.css` which define the design system, animations, and typography (e.g., the neon-green HealStep theme).
 - **`public/js/`** — Contains client-side JavaScript utilities (like `auth.js` for checking login sessions).
 - **`public/dashboard.html`** — The main user hub. It displays quick actions, a snapshot of today's routine, and the real-time Recovery Score (rendered dynamically via Chart.js).
 - **`public/upload-report.html`** — The interface where patients upload their medical reports (PDF/Images) to trigger the AI analysis. Contains drag-and-drop logic and sleek loading animations.

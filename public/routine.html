@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Healio — My Routine</title>
+  <title>HealStep — My Routine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Serif+Display&display=swap" rel="stylesheet">
@@ -160,10 +160,10 @@
     /* EXERCISE CARD */
     .exercise-card {
       background: var(--color-surface); border: 1px solid rgba(255,255,255,0.05);
-      border-radius: var(--radius-xl); padding: var(--space-5);
+      border-radius: var(--radius-xl); padding: var(--space-6);
       transition: all var(--transition);
       animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
-      display: flex; gap: var(--space-4); align-items: flex-start;
+      display: flex; flex-direction: column; gap: var(--space-4);
     }
     .exercise-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
     .exercise-icon-wrap {
@@ -175,6 +175,47 @@
     .exercise-name { font-size: 0.95rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--space-1); }
     .exercise-meta { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: var(--space-3); }
     .exercise-bar { height: 4px; background: var(--color-surface-2); border-radius: var(--radius-full); overflow: hidden; }
+    /* DOCTOR REPORT CARD */
+    .doctor-report-card {
+      background: rgba(0,212,170,0.03);
+      border: 1px solid rgba(0,212,170,0.15);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      position: relative; overflow: hidden;
+      animation: fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .doctor-report-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+      background: #00d4aa;
+    }
+    .report-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-6); padding-bottom: var(--space-4);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .report-title {
+      display: flex; align-items: center; gap: var(--space-3);
+      font-family: var(--font-display); font-size: 1.15rem; color: #00d4aa;
+    }
+    .report-badge {
+      font-size: 0.7rem; font-weight: 700; color: rgba(0,212,170,0.8);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      background: rgba(0,212,170,0.1); padding: 4px 12px; border-radius: var(--radius-full);
+    }
+    .report-section { margin-bottom: var(--space-6); }
+    .report-section:last-child { margin-bottom: 0; }
+    .report-label {
+      font-size: 0.75rem; font-weight: 800; color: var(--color-text-faint);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: var(--space-2);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .report-text {
+      font-size: 0.95rem; color: var(--color-text); line-height: 1.7;
+    }
+    .report-comparison-box {
+      background: rgba(79,195,247,0.05); border: 1px solid rgba(79,195,247,0.15);
+      border-radius: var(--radius-xl); padding: var(--space-4) var(--space-5);
+    }
     .exercise-bar-fill {
       height: 100%; border-radius: var(--radius-full);
       background: linear-gradient(90deg, #00d4aa, #4fc3f7);
@@ -189,29 +230,7 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* MEDICINE CARD */
-    .medicine-card {
-      background: var(--color-surface); border: 1px solid rgba(255,255,255,0.05);
-      border-radius: var(--radius-xl); padding: var(--space-5);
-      display: flex; align-items: center; gap: var(--space-4);
-      transition: all var(--transition);
-      animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
-      margin-bottom: var(--space-4);
-    }
-    .medicine-card:hover { transform: translateX(4px); }
-    .med-icon {
-      width: 44px; height: 44px; border-radius: var(--radius-xl);
-      background: rgba(79,195,247,0.1); border: 1px solid rgba(79,195,247,0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; flex-shrink: 0;
-    }
-    .med-name  { font-size: 0.95rem; font-weight: 700; color: var(--color-text); }
-    .med-dose  { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px; }
-    .med-time  {
-      margin-left: auto; font-size: 0.78rem; font-weight: 700;
-      padding: 4px 12px; border-radius: var(--radius-full);
-      background: rgba(79,195,247,0.1); color: #4fc3f7; flex-shrink: 0;
-    }
+
   </style>
 </head>
 <body>
@@ -220,7 +239,7 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">+</div>
-      <div class="sidebar-logo-name">Healio</div>
+      <div class="sidebar-logo-name">HealStep</div>
     </div>
     <span class="nav-section-label">Main</span>
     <a href="dashboard.html" class="nav-item">
@@ -270,18 +289,35 @@
       <div class="tab-bar">
         <button class="tab-btn active" onclick="switchTab('food')">Food Plan</button>
         <button class="tab-btn" onclick="switchTab('exercise')">Exercise</button>
-        <button class="tab-btn" onclick="switchTab('medicine')">Medicines</button>
       </div>
     </div>
 
     <!-- AI ANALYSIS CARD -->
-    <div id="ai-analysis-wrap" style="display:none; margin-bottom: var(--space-6); animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.05s both;">
-      <div style="background: rgba(0,212,170,0.05); border: 1px solid rgba(0,212,170,0.2); border-radius: var(--radius-xl); padding: var(--space-6);">
-        <h3 style="font-size: 1rem; color: #00d4aa; margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
-          Doctor's Note
-        </h3>
-        <p id="ai-analysis-text" style="font-size: 0.9rem; color: var(--color-text); line-height: 1.6;"></p>
+    <div id="ai-analysis-wrap" style="display:none; margin-bottom: var(--space-10);">
+      <div class="doctor-report-card">
+        <div class="report-header">
+          <div class="report-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Clinical Insights
+          </div>
+          <span class="report-badge">AI Verified Analysis</span>
+        </div>
+        
+        <div class="report-section">
+          <div class="report-label">
+            <span style="color:#00d4aa">●</span> Key Findings
+          </div>
+          <div id="ai-summary-text" class="report-text"></div>
+        </div>
+
+        <div id="ai-comparison-wrap" class="report-section" style="display:none">
+          <div class="report-label">
+            <span style="color:#4fc3f7">✦</span> Historical Comparison
+          </div>
+          <div class="report-comparison-box">
+            <div id="ai-comparison-text" class="report-text" style="font-weight: 500; color: #4fc3f7;"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -318,40 +354,6 @@
       </div>
     </div>
 
-    <!-- MEDICINE TAB -->
-    <div class="tab-panel" id="tab-medicine">
-      <div class="medicine-card" style="animation-delay:0.05s">
-        <div class="med-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="2"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="M22 22l-1.5-1.5"/></svg>
-        </div>
-        <div>
-          <div class="med-name">Aspirin 75mg</div>
-          <div class="med-dose">1 tablet · After breakfast · With water</div>
-        </div>
-        <span class="med-time">8:30 AM</span>
-      </div>
-      <div class="medicine-card" style="animation-delay:0.1s">
-        <div class="med-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="2"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="M22 22l-1.5-1.5"/></svg>
-        </div>
-        <div>
-          <div class="med-name">Atorvastatin 20mg</div>
-          <div class="med-dose">1 tablet · After breakfast · Cholesterol control</div>
-        </div>
-        <span class="med-time">8:30 AM</span>
-      </div>
-      <div class="routine-section-title">Night Medicines</div>
-      <div class="medicine-card" style="animation-delay:0.15s">
-        <div class="med-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="2"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="M22 22l-1.5-1.5"/></svg>
-        </div>
-        <div>
-          <div class="med-name">Metoprolol 25mg</div>
-          <div class="med-dose">1 tablet · After dinner · Blood pressure</div>
-        </div>
-        <span class="med-time">9:00 PM</span>
-      </div>
-    </div>
 
   </main>
 
@@ -378,7 +380,29 @@
       document.getElementById('mainProgress').style.width = (total ? (completed / total * 100) : 0) + '%';
     }
 
-    // ── Meal card builder ────────────────────────────────────────────────────
+    // ── Meal card builder (new granular object format) ───────────────────────
+    const PERIOD_CLS = { morning: 'breakfast', afternoon: 'lunch', evening: 'dinner' };
+
+    function buildMealCardNew(entry, periodCls, delay) {
+      const tags = (entry.tags || []).map(t => `<span class="meal-tag">${t}</span>`).join('');
+      const alternateHTML = entry.alternate ? `
+        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.1); font-size:0.78rem; color:rgba(255, 209, 102, 0.9); font-style:italic; line-height:1.4">
+          <span style="font-weight:700; font-style:normal; color:#ffd166; margin-right:4px">🔄 ALT:</span> ${entry.alternate}
+        </div>` : '';
+      return `
+        <div class="meal-card ${periodCls}" style="animation-delay:${delay}s">
+          <div class="meal-top">
+            <span class="meal-time-badge">${entry.time || ''}</span>
+            <div class="meal-check" onclick="toggleMeal(this)"></div>
+          </div>
+          <div class="meal-name">${entry.title || 'Meal'}</div>
+          <div class="meal-desc">${entry.desc || ''}</div>
+          ${alternateHTML}
+          <div class="meal-tags" style="margin-top:var(--space-3)">${tags}</div>
+        </div>`;
+    }
+
+    // Legacy flat-key builder (kept for backward compat with old DB rows)
     const MEAL_META = {
       breakfast:        { label: 'Breakfast',    time: '8:00 AM',  cls: 'breakfast' },
       mid_morning_snack:{ label: 'Mid-Morning',  time: '10:30 AM', cls: 'snack'     },
@@ -387,7 +411,6 @@
       dinner:           { label: 'Dinner',       time: '7:30 PM',  cls: 'dinner'    },
       hydration:        { label: 'Hydration',    time: 'All Day',  cls: 'snack'     },
     };
-
     function buildMealCard(key, desc, delay) {
       const m = MEAL_META[key] || { label: key, time: '', cls: 'snack' };
       return `
@@ -464,31 +487,70 @@
         // ── Render AI Analysis ────────────────────────────────────────────
         if (data.extracted_summary) {
           document.getElementById('ai-analysis-wrap').style.display = 'block';
-          // Emphasize the historical comparison text if present
-          let formattedText = data.extracted_summary.replace(/Comparison:/g, '<br><br><strong style="color: #4fc3f7; font-size: 0.95rem;">Historical Comparison:</strong><br>');
-          document.getElementById('ai-analysis-text').innerHTML = formattedText;
+          
+          // Split summary and comparison if they come back in one string from older rows
+          const raw = data.extracted_summary;
+          let summary = raw;
+          let comparison = data.comparison || null;
+
+          if (raw.includes('Comparison:')) {
+            const parts = raw.split('Comparison:');
+            summary = parts[0].trim();
+            comparison = parts[1].trim();
+          }
+
+          document.getElementById('ai-summary-text').textContent = summary;
+          
+          if (comparison && comparison !== 'null') {
+            document.getElementById('ai-comparison-wrap').style.display = 'block';
+            document.getElementById('ai-comparison-text').textContent = comparison;
+          } else {
+            document.getElementById('ai-comparison-wrap').style.display = 'none';
+          }
         } else {
           document.getElementById('ai-analysis-wrap').style.display = 'none';
         }
 
         // ── Render meals ──────────────────────────────────────────────────
-        const meal  = data.meal_plan || {};
+        const meal = data.meal_plan || {};
         let mealHTML = '';
-        
-        if (meal.diet) {
+
+        // NEW format: { morning: [...], afternoon: [...], evening: [...] }
+        const isNewDietFormat = meal.morning || meal.afternoon || meal.evening;
+        if (isNewDietFormat) {
+          const PERIODS = [
+            { key: 'morning',   label: '🌅 Morning',   cls: 'breakfast' },
+            { key: 'afternoon', label: '☀️ Afternoon', cls: 'lunch'     },
+            { key: 'evening',   label: '🌙 Evening',   cls: 'dinner'    },
+          ];
+          let delay = 0.05;
+          PERIODS.forEach(p => {
+            const items = meal[p.key];
+            if (!items || !items.length) return;
+            const cards = items.map(entry => { const c = buildMealCardNew(entry, p.cls, delay); delay += 0.06; return c; }).join('');
+            mealHTML += `<div class="routine-section-title">${p.label}</div><div class="routine-grid">${cards}</div>`;
+          });
+          // Handle legacy _legacy array fallback stored inside new wrapper
+          if (!mealHTML && meal._legacy) {
+            const legacyText = Array.isArray(meal._legacy) ? meal._legacy.map(i => '• ' + i).join('<br>') : meal._legacy;
+            mealHTML = `<div class="routine-section-title">Dietary Recommendations</div>
+              <div class="meal-card lunch" style="display:block;width:100%;animation-delay:0.1s">
+                <div class="meal-top"><span class="meal-time-badge">All Day</span><div class="meal-check" onclick="toggleMeal(this)"></div></div>
+                <div class="meal-name">Recovery Diet</div>
+                <div class="meal-desc" style="white-space:pre-wrap">${legacyText}</div>
+              </div>`;
+          }
+        } else if (meal.diet) {
+          // OLD flat-array format: { diet: ["item1", "item2"] }
           const dietText = Array.isArray(meal.diet) ? meal.diet.map(i => '• ' + i).join('<br>') : meal.diet;
-          mealHTML = `
-            <div class="routine-section-title">Dietary Recommendations</div>
-            <div class="meal-card lunch" style="animation-delay:0.1s; display:block; width:100%;">
-              <div class="meal-top">
-                <span class="meal-time-badge">All Day</span>
-                <div class="meal-check" onclick="toggleMeal(this)"></div>
-              </div>
+          mealHTML = `<div class="routine-section-title">Dietary Recommendations</div>
+            <div class="meal-card lunch" style="animation-delay:0.1s;display:block;width:100%">
+              <div class="meal-top"><span class="meal-time-badge">All Day</span><div class="meal-check" onclick="toggleMeal(this)"></div></div>
               <div class="meal-name">Recovery Diet</div>
-              <div class="meal-desc" style="white-space: pre-wrap; font-size: 0.9rem;">${dietText}</div>
+              <div class="meal-desc" style="white-space:pre-wrap;font-size:0.9rem">${dietText}</div>
             </div>`;
         } else {
-          const ORDER = ['breakfast','mid_morning_snack','lunch','evening_snack','dinner','hydration'];
+          // OLD keyed format: { breakfast: '...', lunch: '...' }
           const SECTIONS = [
             { title: 'Morning',        keys: ['breakfast','mid_morning_snack'] },
             { title: 'Afternoon',      keys: ['lunch','evening_snack']         },
@@ -500,9 +562,7 @@
               .filter(k => meal[k])
               .map(k => { const c = buildMealCard(k, meal[k], delay); delay += 0.05; return c; })
               .join('');
-            if (cards) mealHTML += `
-              <div class="routine-section-title">${sec.title}</div>
-              <div class="routine-grid">${cards}</div>`;
+            if (cards) mealHTML += `<div class="routine-section-title">${sec.title}</div><div class="routine-grid">${cards}</div>`;
           });
         }
         document.getElementById('meal-container').innerHTML = mealHTML || '<p style="color:var(--color-text-muted);padding:var(--space-6)">No meal data in this plan.</p>';
@@ -511,37 +571,80 @@
         const ex = data.exercise_plan || {};
         let exHTML = '';
 
-        if (ex.exercise || ex.precautions) {
+        // NEW format: { exercises: [{title, duration, note}], precautions: [...] }
+        if (ex.exercises && ex.exercises.length > 0) {
+          const exIcons = ['🏃','🧘','💪','🚶','🤸','🏊'];
+          const exCards = ex.exercises.map((e, i) => {
+            const icon = exIcons[i % exIcons.length];
+            return `
+              <div class="exercise-card" style="animation-delay:${0.05 + i * 0.07}s">
+                <div style="display:flex; gap:16px; align-items:center">
+                  <div class="exercise-icon-wrap">${icon}</div>
+                  <div style="flex:1">
+                    <div class="exercise-name">${e.title || 'Exercise'}</div>
+                    <div class="exercise-meta" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                      <span style="background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px; font-size:0.7rem">${e.pose_type || 'General'}</span>
+                      <span style="background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px; font-size:0.7rem">${e.movement_type || 'Active'}</span>
+                      <span style="color:var(--color-text-faint); font-size:0.7rem">·</span>
+                      <span style="color:var(--color-text-muted)">${e.timing || 'Anytime'} · ${e.schedule || e.duration || ''}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="font-size:0.875rem; color:var(--color-text-muted); line-height:1.6; border-left:2px solid rgba(0,212,170,0.3); padding-left:12px; margin-left:2px">
+                  <div style="margin-bottom:12px">
+                    <span style="color:#00d4aa; font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:2px">What it is</span>
+                    ${e.what_it_is || 'A gentle movement to aid recovery.'}
+                  </div>
+                  
+                  <div style="margin-bottom:12px">
+                    <span style="color:#00d4aa; font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:2px">How to do it</span>
+                    <div style="font-size:0.85rem; padding-left:4px">${e.steps || 'Follow the basic movement steps slowly.'}</div>
+                  </div>
+
+                  <div>
+                    <span style="color:#00d4aa; font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:2px">Why this matters</span>
+                    ${e.benefit || 'Designed specifically for your recovery markers.'}
+                  </div>
+                </div>
+
+                ${e.note ? `
+                  <div style="font-size:0.78rem; color:#ffd166; background:rgba(255,209,102,0.05); padding:10px 14px; border-radius:12px; border:1px dashed rgba(255,209,102,0.2); display:flex; gap:8px; align-items:center">
+                    <span>⚠️</span>
+                    <span>${e.note}</span>
+                  </div>` : ''}
+              </div>`;
+          }).join('');
+          exHTML += `<div class="routine-section-title">💪 Exercise Plan</div><div style="display:flex;flex-direction:column;gap:var(--space-4)">${exCards}</div>`;
+          if (ex.precautions && ex.precautions.length > 0) {
+            const preItems = ex.precautions.map(p => `<li style="margin-bottom:6px">${p}</li>`).join('');
+            exHTML += `
+              <div class="routine-section-title" style="margin-top:var(--space-6)">⚠️ Precautions</div>
+              <div class="exercise-card" style="animation-delay:0.3s">
+                <div class="exercise-icon-wrap" style="background:rgba(239,71,111,0.1);border-color:rgba(239,71,111,0.2);font-size:1.4rem">⚠️</div>
+                <div style="flex:1">
+                  <ul style="margin:0;padding-left:18px;font-size:0.85rem;color:var(--color-text-muted);line-height:1.7">${preItems}</ul>
+                </div>
+              </div>`;
+          }
+        } else if (ex.exercise || ex.precautions) {
+          // OLD flat-string format: { exercise: [...], precautions: [...] }
           exHTML += `<div class="routine-section-title">Your Exercise Plan</div><div style="display:flex;flex-direction:column;gap:var(--space-4)">`;
           if (ex.exercise) {
             const exText = Array.isArray(ex.exercise) ? ex.exercise.map(i => '• ' + i).join('<br>') : ex.exercise;
-            exHTML += `
-              <div class="exercise-card" style="animation-delay:0.1s">
-                <div class="exercise-icon-wrap" style="background:rgba(79,195,247,0.1); border-color:rgba(79,195,247,0.2); color:#4fc3f7;">🏃</div>
-                <div style="flex:1">
-                  <div class="exercise-name">Recommended Activity</div>
-                  <div class="exercise-meta" style="margin-bottom:0; font-size:0.85rem; line-height:1.5;">${exText}</div>
-                </div>
-              </div>`;
+            exHTML += `<div class="exercise-card" style="animation-delay:0.1s">
+                <div class="exercise-icon-wrap" style="font-size:1.3rem">🏃</div>
+                <div style="flex:1"><div class="exercise-name">Recommended Activity</div>
+                <div class="exercise-meta" style="margin-bottom:0;font-size:0.85rem;line-height:1.5">${exText}</div></div></div>`;
           }
           if (ex.precautions && ex.precautions.length > 0) {
             const preText = Array.isArray(ex.precautions) ? ex.precautions.map(i => '• ' + i).join('<br>') : ex.precautions;
-            exHTML += `
-              <div class="exercise-card" style="animation-delay:0.2s">
-                <div class="exercise-icon-wrap" style="background:rgba(239,71,111,0.1); border-color:rgba(239,71,111,0.2); color:#ef476f;">⚠️</div>
-                <div style="flex:1">
-                  <div class="exercise-name">Precautions</div>
-                  <div class="exercise-meta" style="margin-bottom:0; font-size:0.85rem; line-height:1.5;">${preText}</div>
-                </div>
-              </div>`;
+            exHTML += `<div class="exercise-card" style="animation-delay:0.2s">
+                <div class="exercise-icon-wrap" style="background:rgba(239,71,111,0.1);border-color:rgba(239,71,111,0.2);font-size:1.3rem">⚠️</div>
+                <div style="flex:1"><div class="exercise-name">Precautions</div>
+                <div class="exercise-meta" style="margin-bottom:0;font-size:0.85rem;line-height:1.5">${preText}</div></div></div>`;
           }
           exHTML += `</div>`;
-        } else if (Array.isArray(ex) && ex.length > 0) {
-          exHTML = `
-            <div class="routine-section-title">Your Exercise Plan</div>
-            <div style="display:flex;flex-direction:column;gap:var(--space-4)">
-              ${ex.map((e, i) => buildExerciseCard(e, i)).join('')}
-            </div>`;
         } else {
           exHTML = '<p style="color:var(--color-text-muted);padding:var(--space-6)">No exercises in this plan.</p>';
         }

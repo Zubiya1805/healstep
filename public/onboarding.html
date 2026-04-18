@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HealStep — Let's set up your recovery</title>
+  <meta name="description" content="Tell HealStep about your condition so we can build your personalised recovery plan."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: var(--space-8) var(--space-4);
+      position: relative; overflow-y: auto;
+    }
+
+    /* ── BACKGROUND ─────────────────────────────────────────────── */
+    .bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.3;
+      animation: float-orb 10s ease-in-out infinite;
+    }
+    .orb-1 { width: 500px; height: 500px; background: #00d4aa; top: -200px; left: -150px; }
+    .orb-2 { width: 400px; height: 400px; background: #4fc3f7; bottom: -150px; right: -100px; animation-delay: -4s; }
+    .orb-3 { width: 300px; height: 300px; background: #7c3aed; top: 50%; left: 55%; animation-delay: -7s; }
+    @keyframes float-orb {
+      0%,100%{ transform: translate(0,0) scale(1); }
+      33%    { transform: translate(25px,-25px) scale(1.04); }
+      66%    { transform: translate(-15px,15px) scale(0.96); }
+    }
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* ── CARD ───────────────────────────────────────────────────── */
+    .onboard-card {
+      position: relative; z-index: 10;
+      background: rgba(9,21,32,0.85);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(0,212,170,0.15);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-10);
+      width: 100%; max-width: 540px;
+      box-shadow: 0 0 60px rgba(0,212,170,0.08), 0 32px 64px rgba(0,0,0,0.6);
+      animation: card-enter 0.7s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes card-enter {
+      from { opacity: 0; transform: translateY(32px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+
+    /* ── LOGO ───────────────────────────────────────────────────── */
+    .logo-row { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-8); }
+    .logo-icon {
+      width: 38px; height: 38px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #00d4aa, #4fc3f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(0,212,170,0.35);
+    }
+    .logo-name { font-family: var(--font-display); font-size: 1.3rem; color: var(--color-text); }
+
+    /* ── PROGRESS ───────────────────────────────────────────────── */
+    .progress-wrap { margin-bottom: var(--space-8); }
+    .progress-label {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    .progress-label span   { font-size: 0.78rem; color: var(--color-text-muted); font-weight: 600; }
+    .progress-label strong { font-size: 0.78rem; color: #00d4aa; }
+    .progress-bar-bg  { height: 4px; border-radius: 99px; background: rgba(255,255,255,0.07); overflow: hidden; }
+    .progress-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #00d4aa, #4fc3f7);
+      transition: width 0.5s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    /* ── STEPS ──────────────────────────────────────────────────── */
+    .step { display: none; animation: fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+    .step.active { display: block; }
+    @keyframes fade-up { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+
+    .step-eyebrow { font-size: 0.75rem; font-weight: 700; color: #00d4aa; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-2); }
+    .step-title   { font-family: var(--font-display); font-size: clamp(1.4rem,3vw,1.9rem); color: var(--color-text); margin-bottom: var(--space-2); line-height: 1.2; }
+    .step-sub     { font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: var(--space-8); line-height: 1.6; }
+
+    /* ── CHIPS ──────────────────────────────────────────────────── */
+    .chips-grid { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-8); }
+    .chip {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: 10px 18px;
+      background: var(--color-surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-full);
+      font-size: 0.875rem; font-weight: 500; color: var(--color-text-muted);
+      cursor: pointer; transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+      user-select: none;
+    }
+    .chip:hover   { border-color: rgba(0,212,170,0.3); color: var(--color-text); background: rgba(0,212,170,0.05); }
+    .chip.selected {
+      background: rgba(0,212,170,0.12);
+      border-color: #00d4aa; color: #00d4aa;
+      box-shadow: 0 0 12px rgba(0,212,170,0.15);
+    }
+    .chip-icon { font-size: 1rem; }
+
+    /* ── SELECT CARDS ───────────────────────────────────────────── */
+    .select-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-3); margin-bottom: var(--space-8); }
+    .select-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: var(--space-2); padding: var(--space-5) var(--space-3);
+      background: var(--color-surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-xl);
+      cursor: pointer; transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+      user-select: none; text-align: center;
+    }
+    .select-card:hover   { border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.05); }
+    .select-card.selected { background: rgba(0,212,170,0.12); border-color: #00d4aa; box-shadow: 0 0 16px rgba(0,212,170,0.15); }
+    .select-card-icon  { font-size: 1.8rem; }
+    .select-card-label { font-size: 0.82rem; font-weight: 600; color: var(--color-text-muted); }
+    .select-card.selected .select-card-label { color: #00d4aa; }
+    .tick {
+      display: none; width: 18px; height: 18px; border-radius: 50%;
+      background: #00d4aa; align-items: center; justify-content: center;
+      font-size: 0.65rem; color: #040d12; font-weight: 900;
+    }
+    .select-card.selected .tick { display: flex; }
+
+    /* ── FORM ───────────────────────────────────────────────────── */
+    .form-group { margin-bottom: var(--space-6); }
+    label {
+      display: block; font-size: 0.75rem; font-weight: 700;
+      color: var(--color-text-muted); margin-bottom: var(--space-2);
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    textarea {
+      width: 100%; padding: 13px 16px;
+      background: var(--color-surface-2);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      color: var(--color-text); font-size: 0.95rem;
+      font-family: inherit;
+      transition: all var(--transition); resize: none;
+    }
+    textarea:focus { outline: none; border-color: #00d4aa; box-shadow: 0 0 0 3px rgba(0,212,170,0.15); background: var(--color-surface-3); }
+    textarea::placeholder { color: var(--color-text-faint); }
+
+    /* ── NOTE ───────────────────────────────────────────────────── */
+    .step-note {
+      display: flex; align-items: flex-start; gap: var(--space-3);
+      background: rgba(0,212,170,0.06); border: 1px solid rgba(0,212,170,0.15);
+      border-radius: var(--radius-lg); padding: var(--space-4);
+      margin-bottom: var(--space-8);
+      font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.5;
+    }
+    .note-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── SUCCESS NOTE ───────────────────────────────────────────── */
+    .success-note {
+      display: flex; flex-direction: column; gap: var(--space-3);
+      background: rgba(0,212,170,0.06); border: 1px solid rgba(0,212,170,0.2);
+      border-radius: var(--radius-xl); padding: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+    .success-row { display: flex; align-items: flex-start; gap: var(--space-3); font-size: 0.875rem; color: var(--color-text-muted); }
+    .success-row span:first-child { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ── BUTTONS ────────────────────────────────────────────────── */
+    .step-nav { display: flex; gap: var(--space-3); }
+    .btn-back {
+      padding: 13px 24px; border-radius: var(--radius-lg);
+      font-size: 0.9rem; font-weight: 600; color: var(--color-text-muted);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all var(--transition); background: transparent; flex-shrink: 0;
+    }
+    .btn-back:hover { color: var(--color-text); border-color: rgba(255,255,255,0.2); }
+    .btn-next {
+      flex: 1; padding: 13px 24px; border-radius: var(--radius-lg);
+      font-size: 1rem; font-weight: 700;
+      background: linear-gradient(135deg, #00d4aa, #00b89a);
+      color: #040d12; transition: all var(--transition);
+      box-shadow: 0 4px 20px rgba(0,212,170,0.3);
+      position: relative; overflow: hidden;
+    }
+    .btn-next::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent); opacity: 0; transition: opacity var(--transition); }
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,170,0.45); }
+    .btn-next:hover::after { opacity: 1; }
+    .btn-next:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ── ERROR ──────────────────────────────────────────────────── */
+    .form-error { color: #ff6b6b; font-size: 0.82rem; margin-bottom: var(--space-4); display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="bg-grid"></div>
+
+  <div class="onboard-card">
+
+    <!-- Logo -->
+    <div class="logo-row">
+      <div class="logo-icon">🩺</div>
+      <div class="logo-name">HealStep</div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="stepLabel">Step 1 of 4</span>
+        <strong id="stepPct">25%</strong>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill" style="width:25%"></div>
+      </div>
+    </div>
+
+    <!-- ── STEP 1: Recovery Condition ───────────────────────────── -->
+    <div class="step active" id="step-1">
+      <div class="step-eyebrow">Step 1 · Your Condition</div>
+      <h2 class="step-title">What are you recovering from?</h2>
+      <p class="step-sub">Select all that apply. This helps us build the right recovery plan for you.</p>
+      <div class="chips-grid" id="condition-chips">
+        <div class="chip" data-value="Heart Surgery / Bypass"   onclick="toggleChip(this)"><span class="chip-icon">❤️</span> Heart Surgery / Bypass</div>
+        <div class="chip" data-value="Kidney Transplant"        onclick="toggleChip(this)"><span class="chip-icon">🫘</span> Kidney Transplant</div>
+        <div class="chip" data-value="Liver Surgery"            onclick="toggleChip(this)"><span class="chip-icon">🟤</span> Liver Surgery</div>
+        <div class="chip" data-value="Cancer Recovery"          onclick="toggleChip(this)"><span class="chip-icon">🎗️</span> Cancer Recovery</div>
+        <div class="chip" data-value="Orthopedic Surgery"       onclick="toggleChip(this)"><span class="chip-icon">🦴</span> Orthopedic Surgery</div>
+        <div class="chip" data-value="Diabetes"                 onclick="toggleChip(this)"><span class="chip-icon">🩸</span> Diabetes</div>
+        <div class="chip" data-value="Lung / Respiratory"       onclick="toggleChip(this)"><span class="chip-icon">🫁</span> Lung / Respiratory</div>
+        <div class="chip" data-value="Neurological"             onclick="toggleChip(this)"><span class="chip-icon">🧠</span> Neurological</div>
+        <div class="chip" data-value="COVID-19 Recovery"        onclick="toggleChip(this)"><span class="chip-icon">🦠</span> COVID-19 Recovery</div>
+        <div class="chip" data-value="Other"                    onclick="toggleChip(this)"><span class="chip-icon">➕</span> Other</div>
+      </div>
+      <div class="form-error" id="err-1">Please select at least one condition.</div>
+      <div class="step-nav">
+        <button class="btn-next" onclick="validateAndGo(2, 'condition-chips')">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Secondary Conditions ─────────────────────────── -->
+    <div class="step" id="step-2">
+      <div class="step-eyebrow">Step 2 · Other Conditions</div>
+      <h2 class="step-title">Any other health conditions?</h2>
+      <p class="step-sub">Select anything that applies. We'll factor these into your plan.</p>
+      <div class="chips-grid" id="other-chips">
+        <div class="chip" data-value="Hypertension"      onclick="toggleChip(this)"><span class="chip-icon">🩺</span> Hypertension</div>
+        <div class="chip" data-value="Thyroid Disorder"  onclick="toggleChip(this)"><span class="chip-icon">🩺</span> Thyroid Disorder</div>
+        <div class="chip" data-value="High Cholesterol"  onclick="toggleChip(this)"><span class="chip-icon">🩺</span> High Cholesterol</div>
+        <div class="chip" data-value="Anaemia"           onclick="toggleChip(this)"><span class="chip-icon">🩺</span> Anaemia</div>
+        <div class="chip" data-value="PCOD / PCOS"       onclick="toggleChip(this)"><span class="chip-icon">🩺</span> PCOD / PCOS</div>
+        <div class="chip" data-value="Arthritis"         onclick="toggleChip(this)"><span class="chip-icon">🩺</span> Arthritis</div>
+        <div class="chip" data-value="Obesity"           onclick="toggleChip(this)"><span class="chip-icon">🩺</span> Obesity</div>
+        <div class="chip" data-value="None"              onclick="toggleChip(this)"><span class="chip-icon">🚫</span> None of the above</div>
+      </div>
+      <div class="form-group">
+        <label>Anything else? (optional)</label>
+        <textarea id="other-conditions-text" rows="2" placeholder="e.g. Chronic back pain, skin condition…"></textarea>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goTo(1)">← Back</button>
+        <button class="btn-next" onclick="goTo(3)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Food Preference ───────────────────────────────── -->
+    <div class="step" id="step-3">
+      <div class="step-eyebrow">Step 3 · Food Preference</div>
+      <h2 class="step-title">What do you eat?</h2>
+      <p class="step-sub">We'll build your meal plan around your diet. Pick one.</p>
+      <div class="select-cards" id="food-cards">
+        <div class="select-card" data-value="Vegetarian"    onclick="selectCard(this,'food-cards')">
+          <div class="select-card-icon">🥦</div>
+          <div class="select-card-label">Vegetarian</div>
+          <div class="tick">✓</div>
+        </div>
+        <div class="select-card" data-value="Non-Vegetarian" onclick="selectCard(this,'food-cards')">
+          <div class="select-card-icon">🍗</div>
+          <div class="select-card-label">Non-Vegetarian</div>
+          <div class="tick">✓</div>
+        </div>
+        <div class="select-card" data-value="Vegan"         onclick="selectCard(this,'food-cards')">
+          <div class="select-card-icon">🌿</div>
+          <div class="select-card-label">Vegan</div>
+          <div class="tick">✓</div>
+        </div>
+        <div class="select-card" data-value="Jain"          onclick="selectCard(this,'food-cards')">
+          <div class="select-card-icon">🕉️</div>
+          <div class="select-card-label">Jain</div>
+          <div class="tick">✓</div>
+        </div>
+        <div class="select-card" data-value="Eggetarian"    onclick="selectCard(this,'food-cards')">
+          <div class="select-card-icon">🥚</div>
+          <div class="select-card-label">Eggetarian</div>
+          <div class="tick">✓</div>
+        </div>
+        <div class="select-card" data-value="No Preference" onclick="selectCard(this,'food-cards')">
+          <div class="select-card-icon">🍽️</div>
+          <div class="select-card-label">No Preference</div>
+          <div class="tick">✓</div>
+        </div>
+      </div>
+      <div class="step-note">
+        <span class="note-icon">💡</span>
+        <span>All meal plans are tailored with real ingredients to suit your recovery condition.</span>
+      </div>
+      <div class="form-error" id="err-3">Please select a food preference.</div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goTo(2)">← Back</button>
+        <button class="btn-next" onclick="validateAndGo(4, 'food-cards')">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: Confirm & Save ────────────────────────────────── -->
+    <div class="step" id="step-4">
+      <div class="step-eyebrow">Step 4 · All Set!</div>
+      <h2 class="step-title">You're ready to start<br>your recovery 🎉</h2>
+      <p class="step-sub">HealStep has everything it needs to build your personalised plan. Upload your first report to get started.</p>
+      <div class="success-note">
+        <div class="success-row"><span>✅</span><span>Your recovery condition and health history have been saved.</span></div>
+        <div class="success-row"><span>🍽️</span><span>Your food preference will guide every meal recommendation.</span></div>
+        <div class="success-row"><span>📊</span><span>Upload a medical report to activate your AI recovery plan.</span></div>
+      </div>
+      <div class="form-error" id="err-4"></div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goTo(3)">← Back</button>
+        <button class="btn-next" id="finish-btn" onclick="saveAndFinish()">Go to Dashboard →</button>
+      </div>
+    </div>
+
+  </div><!-- /onboard-card -->
+
+  <script>
+    // ── State ─────────────────────────────────────────────────────
+    const PCTS   = ['25%','50%','75%','100%'];
+    const LABELS = ['Step 1 of 4','Step 2 of 4','Step 3 of 4','Step 4 of 4'];
+
+    // ── Navigation ────────────────────────────────────────────────
+    function goTo(n) {
+      document.querySelector('.step.active').classList.remove('active');
+      document.getElementById('step-' + n).classList.add('active');
+      document.getElementById('progressFill').style.width = PCTS[n - 1];
+      document.getElementById('stepPct').textContent      = PCTS[n - 1];
+      document.getElementById('stepLabel').textContent    = LABELS[n - 1];
+    }
+
+    // ── Validate then navigate ────────────────────────────────────
+    function validateAndGo(next, chipGroupId) {
+      const errId = 'err-' + (next - 1);
+      const errEl = document.getElementById(errId);
+      if (errEl) errEl.style.display = 'none';
+
+      if (chipGroupId === 'condition-chips') {
+        const sel = document.querySelectorAll('#condition-chips .chip.selected');
+        if (sel.length === 0) { if (errEl) errEl.style.display = 'block'; return; }
+      }
+      if (chipGroupId === 'food-cards') {
+        const sel = document.querySelectorAll('#food-cards .select-card.selected');
+        if (sel.length === 0) {
+          const e3 = document.getElementById('err-3');
+          if (e3) e3.style.display = 'block';
+          return;
+        }
+      }
+      goTo(next);
+    }
+
+    // ── Chip toggles ──────────────────────────────────────────────
+    function toggleChip(el) { el.classList.toggle('selected'); }
+
+    // ── Single-select cards ───────────────────────────────────────
+    function selectCard(el, groupId) {
+      document.querySelectorAll('#' + groupId + ' .select-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    // ── Collect data ──────────────────────────────────────────────
+    function collectData() {
+      const recovery_conditions = [...document.querySelectorAll('#condition-chips .chip.selected')]
+        .map(c => c.dataset.value);
+
+      const secondary = [...document.querySelectorAll('#other-chips .chip.selected')]
+        .map(c => c.dataset.value);
+      const extraText = (document.getElementById('other-conditions-text').value || '').trim();
+      if (extraText) secondary.push(extraText);
+      const secondary_conditions = secondary;
+
+      const foodEl = document.querySelector('#food-cards .select-card.selected');
+      const food_preference = foodEl ? foodEl.dataset.value : 'No Preference';
+
+      return { recovery_conditions, secondary_conditions, food_preference };
+    }
+
+    // ── Save to backend & redirect ────────────────────────────────
+    async function saveAndFinish() {
+      const userId = localStorage.getItem('user_id');
+      const errEl  = document.getElementById('err-4');
+      errEl.style.display = 'none';
+
+      if (!userId) {
+        errEl.textContent = 'Session expired. Please log in again.';
+        errEl.style.display = 'block';
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return;
+      }
+
+      const btn = document.getElementById('finish-btn');
+      btn.textContent = 'Saving…'; btn.disabled = true;
+
+      const payload = collectData();
+
+      try {
+        const res = await fetch('/api/users/' + userId + '/onboarding', {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Save failed.');
+        // Cache conditions locally for context hints
+        localStorage.setItem('user_conditions',  JSON.stringify(payload.recovery_conditions));
+        localStorage.setItem('user_food_pref',   payload.food_preference);
+        window.location.href = 'upload-report.html';
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+        btn.textContent = 'Go to Dashboard →'; btn.disabled = false;
+      }
+    }
+
+    // ── Guard: must be logged in ──────────────────────────────────
+    (function() {
+      if (!localStorage.getItem('user_id')) {
+        window.location.href = 'login.html';
+      }
+    })();
+  </script>
+</body>
+</html>

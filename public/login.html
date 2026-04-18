@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Healio — Recovery Intelligence</title>
+  <title>HealStep — Recovery Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=DM+Serif+Display&display=swap" rel="stylesheet">
@@ -238,7 +238,7 @@
     <div class="logo">
       <div class="logo-icon">🩺</div>
       <div>
-        <div class="logo-name">Healio</div>
+        <div class="logo-name">HealStep</div>
         <div class="logo-tagline">Recovery Intelligence</div>
       </div>
     </div>
@@ -289,7 +289,7 @@
       </button>
     </div>
 
-    <!-- SIGNUP FORM -->
+    <!-- SIGNUP FORM — basic fields only; condition data collected in onboarding -->
     <div class="form-panel" id="signup-panel">
       <div class="form-group">
         <label>Full Name</label>
@@ -303,41 +303,6 @@
         <div class="input-wrap">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           <input id="reg-email" type="email" placeholder="you@example.com"/>
-        </div>
-      </div>
-      <div class="form-group" style="display:flex;gap:12px;">
-        <div style="flex:1;">
-          <label>Age</label>
-          <div class="input-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
-            <input id="reg-age" type="number" placeholder="35" min="1" max="120"/>
-          </div>
-        </div>
-        <div style="flex:1;">
-          <label>Weight (kg)</label>
-          <div class="input-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h12l2 5H4L6 2z"/><rect x="3" y="7" width="18" height="14" rx="2"/></svg>
-            <input id="reg-weight" type="number" placeholder="70" min="1"/>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Surgery / Condition Type</label>
-        <select id="reg-surgery">
-          <option value="" disabled selected>Select your condition</option>
-          <option>Heart Surgery / Bypass</option>
-          <option>Kidney Transplant</option>
-          <option>Liver Surgery</option>
-          <option>Cancer Recovery</option>
-          <option>Orthopedic Surgery</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Discharge Date</label>
-        <div class="input-wrap">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          <input id="reg-discharge" type="date" style="padding-left:44px;"/>
         </div>
       </div>
       <div class="form-group">
@@ -395,29 +360,29 @@
     async function handleRegister() {
       const name     = document.getElementById('reg-name').value.trim();
       const email    = document.getElementById('reg-email').value.trim();
-      const age      = document.getElementById('reg-age').value;
-      const weight   = document.getElementById('reg-weight').value;
-      const surgery  = document.getElementById('reg-surgery').value;
-      const discharge= document.getElementById('reg-discharge').value;
       const password = document.getElementById('reg-password').value;
       const errEl    = document.getElementById('reg-error');
       const btn      = document.getElementById('reg-btn');
       errEl.style.display = 'none';
-      if (!name || !email || !age || !weight || !surgery || !discharge || !password) {
-        showErr(errEl, 'All fields are required.'); return;
+      if (!name || !email || !password) {
+        showErr(errEl, 'Name, email and password are required.'); return;
+      }
+      if (password.length < 6) {
+        showErr(errEl, 'Password must be at least 6 characters.'); return;
       }
       btn.textContent = 'Creating account…'; btn.disabled = true;
       try {
         const res  = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, age, weight, surgery_type: surgery, discharge_date: discharge, password })
+          body: JSON.stringify({ name, email, password })
         });
         const data = await res.json();
         if (!res.ok) { showErr(errEl, data.error || 'Registration failed.'); return; }
-        localStorage.setItem('user_id', data.user_id);
+        localStorage.setItem('user_id',   data.user_id);
         localStorage.setItem('user_name', data.name);
-        window.location.href = 'upload-report.html';
+        // Redirect to onboarding to collect health details
+        window.location.href = 'onboarding.html';
       } catch (e) {
         showErr(errEl, 'Network error. Is the server running?');
       } finally {

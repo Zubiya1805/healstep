@@ -1,6 +1,6 @@
-# Healio AI Layer (The "Brain")
+# HealStep AI Layer (The "Brain")
 
-This document details the artificial intelligence pipeline that powers Healio's automated medical report analysis, historical comparison, and recovery plan generation.
+This document details the artificial intelligence pipeline that powers HealStep's automated medical report analysis, historical comparison, and recovery plan generation.
 
 ## 1. Provider & Model
 - **Provider**: OpenRouter
