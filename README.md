@@ -96,7 +96,7 @@ healstep/
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/dubey-7/healstep.git
+git clone https://github.com/Zubiya1805/healstep.git
 cd healstep
 ```
 
