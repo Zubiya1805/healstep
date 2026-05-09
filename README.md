@@ -1,3 +1,4 @@
+![banner](banner-healstep.svg)
 # 🩺 HealStep – AI-Powered Recovery & Health Tracking System
 
 ## 🚀 Overview
