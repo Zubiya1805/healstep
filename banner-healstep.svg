@@ -1,0 +1,29 @@
+<svg width="900" height="140" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="140" fill="#0d1117"/>
+
+  <!-- heartbeat line motif -->
+  <polyline points="0,80 60,80 80,40 100,110 120,60 140,80 220,80" 
+    fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.3"/>
+  <polyline points="680,80 750,80 770,40 790,110 810,60 830,80 900,80"
+    fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- accent -->
+  <rect x="44" y="30" width="3" height="80" fill="#3fb950" rx="1"/>
+
+  <!-- number tag -->
+  <text x="62" y="50" font-family="'Courier New',monospace" font-size="10" fill="#3fb950" letter-spacing="3">01 / AI &amp; HEALTH TECH</text>
+
+  <!-- title -->
+  <text x="60" y="95" font-family="'Courier New',monospace" font-size="48" font-weight="700" fill="#e6edf3" letter-spacing="1">HEALSTEP</text>
+
+  <!-- desc -->
+  <text x="62" y="118" font-family="'Courier New',monospace" font-size="11" fill="#8b949e">AI-powered recovery tracker · personalized meal plans · adaptive exercise · smart medical reports</text>
+
+  <!-- tag pills -->
+  <rect x="62" y="125" width="36" height="12" rx="6" fill="#1a2f1a"/>
+  <text x="80" y="134" font-family="'Courier New',monospace" font-size="8" fill="#3fb950" text-anchor="middle">#ai</text>
+  <rect x="104" y="125" width="72" height="12" rx="6" fill="#1a2f1a"/>
+  <text x="140" y="134" font-family="'Courier New',monospace" font-size="8" fill="#3fb950" text-anchor="middle">#health-tech</text>
+  <rect x="182" y="125" width="60" height="12" rx="6" fill="#1a2f1a"/>
+  <text x="212" y="134" font-family="'Courier New',monospace" font-size="8" fill="#3fb950" text-anchor="middle">#python</text>
+</svg>
